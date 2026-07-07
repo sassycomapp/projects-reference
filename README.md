@@ -43,3 +43,6 @@ No project will use all the ADR global documents; all the Checklists; all the po
 
 State of global documents:
 All the documents in "C:\projects\project-library-global" They have been hurriedly and haphazardly assembled Many have been copied in directly from other project folders The documents do need to updated and in some cases created .the documents are the prefix "mt-" or empty documents which require to be written.  Some folders only have a single document in which is really just a placeholder for the documents that must be created in that folder 
+
+PDLF runs
+It is possible Two or more projects can be in a state of development in the PDLF at anyone time . PDLF must manage this. do not get lines crossed between the projects 
