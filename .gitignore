@@ -1,0 +1,8 @@
+dev-*/
+
+scratch/
+
+# Config files
+.env*
+*.local
+.DS_Store
