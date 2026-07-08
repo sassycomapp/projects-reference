@@ -4,7 +4,7 @@
 
 ## Project purpose
 
-This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`), and the project template (`dev-project-template/`). Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects` workspace itself.
+This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), the project template (`dev-project-template/`), and global reference documents. Individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`) are located in `C:\dev\`. Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects` workspace itself.
 
 ---
 
@@ -62,8 +62,7 @@ Read the project's `README.md` before every task alongside the `AGENTS.md` files
 | Folder | Purpose |
 |---|---|
 | `project-library-global/` | Shared resources: global ADRs, checklists, docs, policies, specifications, templates |
-| `dev-*/` | Individual project workspaces |
-| `dev-project-template/` | Template for bootstrapping new projects |
+| `C:\dev\dev-*/` | Individual project workspaces (mb-3-cs, mb4ecom, mb5pdlf, pdlf, etc.) |
 
 ---
 
