@@ -168,30 +168,25 @@ These directories are created on first skill use. Subdirectories (`ceo-plans/`, 
 
 ---
 
-## Path Verification (as of 2026-07-08)
+## Path Verification (as of 2026-07-08, all fixed)
 
-### Project-local paths
+### Project-local paths (all verified OK)
 
 | Path | mb-3-cs | mb4ecom | mb5pdlf | dev-pdlf | Notes |
 |---|---|---|---|---|---|
 | `CONTEXT.md` | Yes | No | No | No | Created lazily by `/domain-modeling` or `/grill-with-docs` |
 | `DESIGN.md` | No | No | No | No | Created by `/design-consultation` |
-| `adr/` | No | Yes | Yes | No | Created when first ADR is written |
-| `.scratch/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
-| `.out-of-scope/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
-| `matt-skills-output/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
-| `gstack-outputs/` | Yes | No | No | No | Created when first gstack artifact is saved |
-| `docs/agents/` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
-| `docs/agents/issue-tracker.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
-| `docs/agents/triage-labels.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
-| `docs/agents/domain.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
+| `adr/` | Yes | Yes | Yes | Yes | Created when first ADR is written |
+| `.scratch/` | Yes | Yes | Yes | Yes | Issue tracker directory |
+| `.out-of-scope/` | Yes | Yes | Yes | Yes | Rejected issues |
+| `matt-skills-output/` | Yes | Yes | Yes | Yes | Copies of handoff + architecture reports |
+| `gstack-outputs/` | Yes | Yes | Yes | Yes | GStack skill outputs |
+| `docs/agents/issue-tracker.md` | Yes | Yes | Yes | Yes | Issue tracker config |
+| `docs/agents/triage-labels.md` | Yes | Yes | Yes | Yes | Triage label vocabulary |
+| `docs/agents/domain.md` | Yes | Yes | Yes | Yes | Domain doc consumption rules |
 | `CLAUDE.md` | Yes | No | No | No | Created by `/setup-matt-pocock-skills` |
 
-**mb-3-cs note:** `docs/agents/` is missing — the setup was done before the move to `C:\dev\`. Needs re-running `/setup-matt-pocock-skills` or manual creation.
-
-**dev-pdlf note:** Most paths missing — this project hasn't had `/setup-matt-pocock-skills` run yet. Needs setup before using engineering skills.
-
-### GStack internal paths
+### GStack internal paths (all verified OK)
 
 | Path | Exists? | Notes |
 |---|---|---|
@@ -199,9 +194,17 @@ These directories are created on first skill use. Subdirectories (`ceo-plans/`, 
 | `~/.gbrain/brain.pglite/` | Yes | GBrain database |
 | `~/.gstack/` | Yes | GStack home |
 | `~/.gstack/.gbrain-sync-state.json` | Yes | Sync state |
-| `~/.gstack/projects/{SLUG}/` | No (all) | Created on first skill use |
+| `~/.gstack/projects/sassycomapp-project-library/` | Yes | mb-3-cs SLUG path with all 8 subdirs |
+| `~/.gstack/projects/sassycomapp-project-library-mb4ecom/` | Yes | mb4ecom SLUG path with all 8 subdirs |
+| `~/.gstack/projects/sassycomapp-project-library-mb5pdlf/` | Yes | mb5pdlf SLUG path with all 8 subdirs |
+| `~/.gstack/projects/sassycomapp-dev-pdlf/` | Yes | dev-pdlf SLUG path with all 8 subdirs |
 | `~/.agents/skills/` | Yes | 18 Matt Pocock skills installed |
 | `~/.agents/.skill-lock.json` | Yes | Lock file |
+| `C:\mybizz\matt-skills-teach` | Yes | Shared teaching workspace |
+
+### GStack SLUG subdirectories (all verified OK for all 4 projects)
+
+Each `~/.gstack/projects/{SLUG}/` contains: `ceo-plans/`, `designs/`, `checkpoints/`, `retros/`, `specs/`, `security-audits/`, `health/`, `qa-reports/`
 
 ---
 
