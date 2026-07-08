@@ -94,6 +94,117 @@ Engineering and productivity skills for real software development with AI agents
 
 ---
 
+## Skill I/O Map — Inputs, Outputs, and Chains
+
+### How skills find their input
+
+| Skill | Input type | Where it looks | Reads from previous skill |
+|---|---|---|---|
+| `/office-hours` | User prompt (product idea) | Conversation context | — (starting point) |
+| `/plan-ceo-review` | Plan file | Conversation plan file + `~/.gstack/projects/{SLUG}/ceo-plans/*.md` | `/office-hours` output |
+| `/plan-eng-review` | Plan file | Conversation plan file + `~/.gstack/projects/{SLUG}/*-design-*.md` | `/office-hours`, `/plan-ceo-review` |
+| `/plan-design-review` | Plan file with UI/UX | Conversation plan file + `DESIGN.md` | `/office-hours`, `/plan-ceo-review` |
+| `/plan-devex-review` | Plan file (dev-facing) | Conversation plan file | `/office-hours` |
+| `/design-consultation` | Product context | Conversation + `~/.gstack/projects/{SLUG}/*office-hours*` + `DESIGN.md` | `/office-hours` |
+| `/design-shotgun` | Design brief | Conversation + `DESIGN.md` + `~/.gstack/projects/{SLUG}/*office-hours*` | `/office-hours`, `/design-consultation` |
+| `/design-html` | Approved mockup or plan | `~/.gstack/projects/{SLUG}/designs/*/approved.json` + `DESIGN.md` | `/design-shotgun` (via `approved.json`) |
+| `/design-review` | Live site URL | URL argument + `DESIGN.md` + browse screenshots | — (standalone) |
+| `/to-prd` | Conversation context | Current conversation + codebase + `CONTEXT.md` + ADRs | — (synthesizes conversation) |
+| `/to-issues` | PRD or spec | Conversation context or issue reference argument + `CONTEXT.md` + ADRs | `/to-prd` (if PRD was just created) |
+| `/triage` | Issue/PR | `.scratch/<feature>/*.md` (issue files) + `.out-of-scope/*.md` + `CONTEXT.md` | — (reads issue tracker) |
+| `/review` | Git diff | `git diff <base>...HEAD` + plan file + `TODOS.md` | — (standalone) |
+| `/qa` | Target URL or diff | URL argument or git diff + browse binary | — (standalone) |
+| `/ship` | Git diff + plan | `git diff` + plan file + `TODOS.md` + `VERSION` + `CHANGELOG.md` | `/review` (checks readiness) |
+| `/spec` | User's vague intent | Conversation + codebase + `gh issue list` (dedupe) | — (standalone) |
+| `/investigate` | Bug report | Conversation + `git log` + codebase + `learnings.jsonl` | — (standalone) |
+| `/improve-codebase-architecture` | Codebase | Full repo + `CONTEXT.md` + ADRs + `/codebase-design` vocabulary | — (standalone) |
+| `/context-save` | Git state | `git status`, `git diff`, `git log`, conversation | — (captures current state) |
+| `/context-restore` | Saved context | `~/.gstack/projects/{SLUG}/checkpoints/*.md` | `/context-save` |
+| `/retro` | Git history | `git log --since=<window>` + `timeline.jsonl` + `learnings.jsonl` | — (standalone) |
+| `/tdd` | Feature/bug spec | Conversation + `CONTEXT.md` + ADRs | `/to-issues` (if issues were created) |
+| `/diagnosing-bugs` | Bug report | Conversation + codebase + `CONTEXT.md` + ADRs | — (standalone) |
+
+### How skills save their output
+
+| Skill | Output type | Where it saves | Consumed by |
+|---|---|---|---|
+| `/office-hours` | Design doc | `~/.gstack/projects/{SLUG}/*-design-*.md` | `/plan-ceo-review`, `/plan-eng-review`, `/design-consultation` |
+| `/plan-ceo-review` | CEO plan | `~/.gstack/projects/{SLUG}/ceo-plans/*.md` + plan file | `/plan-eng-review`, `/plan-design-review` |
+| `/plan-eng-review` | Eng review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` (checks readiness) |
+| `/plan-design-review` | Design review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` |
+| `/plan-devex-review` | DX review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` |
+| `/design-consultation` | DESIGN.md | `DESIGN.md` in repo root + `~/.gstack/projects/{SLUG}/designs/` | `/design-shotgun`, `/design-html`, `/design-review` |
+| `/design-shotgun` | Design variants | `~/.gstack/projects/{SLUG}/designs/{session}/variant-*.png` + `board.html` + `approved.json` | `/design-html` (reads `approved.json`) |
+| `/design-html` | HTML/CSS | `~/.gstack/projects/{SLUG}/designs/*/finalized.html` | — (end of design pipeline) |
+| `/design-review` | Fix commits | Source code (atomic commits) + `.gstack/qa-reports/` | — (end of review) |
+| `/to-prd` | PRD | `.scratch/<feature>/<prd-slug>.md` | `/to-issues` |
+| `/to-issues` | Issues | `.scratch/<feature>/<issue-slug>.md` | `/triage`, `/tdd` |
+| `/triage` | Issue updates | `.scratch/` (in-place) + `.out-of-scope/<topic>.md` (rejections) | — (issue tracker) |
+| `/review` | Review report | Prose output (conversation) | `/ship` |
+| `/qa` | Fix commits + report | Source code + `.gstack/qa-reports/` | — (end of QA) |
+| `/ship` | PR + version bump | GitHub PR + `VERSION` + `CHANGELOG.md` + `TODOS.md` | `/land-and-deploy` |
+| `/spec` | GitHub issue | GitHub issue + `~/.gstack/projects/{SLUG}/specs/*.md` | `/to-issues` (if breaking into tasks) |
+| `/investigate` | Fix + learning | Source code (commit) + `learnings.jsonl` | — (end of investigation) |
+| `/improve-codebase-architecture` | HTML report | `%TEMP%/architecture-review-*.html` + copy to `matt-skills-output/` | `/handoff` |
+| `/context-save` | Checkpoint | `~/.gstack/projects/{SLUG}/checkpoints/*.md` | `/context-restore` |
+| `/retro` | Retro report | `~/.gstack/projects/{SLUG}/retros/*.md` | — (reference) |
+| `/tdd` | Tests + code | In-place in codebase | — (end of TDD) |
+| `/diagnosing-bugs` | Fix + regression test | In-place in codebase | — (end of diagnosis) |
+| `/handoff` | Handoff doc | `%TEMP%/handoff-*.md` + copy to `matt-skills-output/` | `/context-restore` (next session) |
+
+### GStack internal paths
+
+Skills reference `~/.gstack/projects/{SLUG}/` where SLUG is derived from the git remote URL. Current SLUGs:
+
+| Project | SLUG | GStack path |
+|---|---|---|
+| projects (root) | `sassycomapp-projects-mgt` | `~/.gstack/projects/sassycomapp-projects-mgt/` |
+| mb-3-cs project-library | `sassycomapp-project-library` | `~/.gstack/projects/sassycomapp-project-library/` |
+| mb4ecom project-library | `sassycomapp-project-library-mb4ecom` | `~/.gstack/projects/sassycomapp-project-library-mb4ecom/` |
+| mb5pdlf project-library | `sassycomapp-project-library-mb5pdlf` | `~/.gstack/projects/sassycomapp-project-library-mb5pdlf/` |
+| dev-pdlf | `sassycomapp-dev-pdlf` | `~/.gstack/projects/sassycomapp-dev-pdlf/` |
+
+These directories are created on first skill use. Subdirectories (`ceo-plans/`, `designs/`, `checkpoints/`, `retros/`, `specs/`, `security-audits/`, `health/`, `qa-reports/`) are created as needed.
+
+---
+
+## Path Verification (as of 2026-07-08)
+
+### Project-local paths
+
+| Path | mb-3-cs | mb4ecom | mb5pdlf | dev-pdlf | Notes |
+|---|---|---|---|---|---|
+| `CONTEXT.md` | Yes | No | No | No | Created lazily by `/domain-modeling` or `/grill-with-docs` |
+| `DESIGN.md` | No | No | No | No | Created by `/design-consultation` |
+| `adr/` | No | Yes | Yes | No | Created when first ADR is written |
+| `.scratch/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
+| `.out-of-scope/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
+| `matt-skills-output/` | Yes | Yes | Yes | No | Created by `/setup-matt-pocock-skills` |
+| `gstack-outputs/` | Yes | No | No | No | Created when first gstack artifact is saved |
+| `docs/agents/` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
+| `docs/agents/issue-tracker.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
+| `docs/agents/triage-labels.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
+| `docs/agents/domain.md` | No | Yes | Yes | Yes | Created by `/setup-matt-pocock-skills` |
+| `CLAUDE.md` | Yes | No | No | No | Created by `/setup-matt-pocock-skills` |
+
+**mb-3-cs note:** `docs/agents/` is missing — the setup was done before the move to `C:\dev\`. Needs re-running `/setup-matt-pocock-skills` or manual creation.
+
+**dev-pdlf note:** Most paths missing — this project hasn't had `/setup-matt-pocock-skills` run yet. Needs setup before using engineering skills.
+
+### GStack internal paths
+
+| Path | Exists? | Notes |
+|---|---|---|
+| `~/.gbrain/config.json` | Yes | GBrain config |
+| `~/.gbrain/brain.pglite/` | Yes | GBrain database |
+| `~/.gstack/` | Yes | GStack home |
+| `~/.gstack/.gbrain-sync-state.json` | Yes | Sync state |
+| `~/.gstack/projects/{SLUG}/` | No (all) | Created on first skill use |
+| `~/.agents/skills/` | Yes | 18 Matt Pocock skills installed |
+| `~/.agents/.skill-lock.json` | Yes | Lock file |
+
+---
+
 ## The Domain Model System
 
 The most powerful technique in the toolkit. Creates a shared language between you and the agent.
