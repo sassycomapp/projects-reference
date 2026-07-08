@@ -157,3 +157,12 @@ Or run everything: `/autoplan`
 ```
 /investigate → /review → /qa → /ship
 ```
+
+**Design workflow (confirm with user before running):**
+```
+/plan-design-review → /plan-eng-review → /design-html → /design-review
+```
+1. `/plan-design-review` — rate design dimensions 0-10, identify gaps, propose fixes
+2. `/plan-eng-review` — lock in execution plan (architecture, data flow, edge cases, test coverage)
+3. `/design-html` — generate production HTML/CSS from approved designs
+4. `/design-review` — visual QA, find inconsistencies, fix with atomic commits

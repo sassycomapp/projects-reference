@@ -237,3 +237,27 @@ gbrain sources remove <id> --confirm-destructive
 ```bash
 gbrain sync --break-lock
 ```
+
+**Embedding fails (API key error):**
+```bash
+source ~/.bashrc
+```
+Then retry the command that failed.
+
+**GBrain WASM error / won't start:**
+Close WSL terminal completely, open a fresh one, retry. If still broken:
+```bash
+rm -rf ~/.gbrain/brain.pglite
+gbrain init
+gbrain embed --stale
+```
+
+**Sync says "no allowlisted changes":**
+Normal — means nothing new to sync from GStack's internal working state. Your `git push` already backed up the project.
+
+**MCP not responding in OpenCode:**
+```bash
+pkill -f "opencode web"
+cd /mnt/c/projects
+opencode web --hostname 0.0.0.0
+```
