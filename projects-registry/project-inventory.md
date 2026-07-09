@@ -1,8 +1,9 @@
 ---
 title: Project Inventory
 description: Certified project registry for all Anvil.works projects — local paths, GitHub repos, and GBrain sources verified
-version: 1.0
+version: 1.1
 date: 2026-07-09
+updated: 2026-07-09
 ---
 
 ## Registered Projects
@@ -41,13 +42,4 @@ date: 2026-07-09
 - Documentation repo (Local): `/mnt/c/dev/dev-pdlf`
 - Documentation repo (GitHub): `https://github.com/sassycomapp/dev-pdlf`
 - Documentation repo (GBrain): `dev-pdlf`
-- Integration checked last: 2026-07-09 — OK
-
-### dev-project-template
-- Code repo (Local): `/mnt/c/dev/dev-project-template`
-- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/project-library-dev-project-template`
-- Code repo (GBrain): `dev-project-template`
-- Documentation repo (Local): `/mnt/c/dev/dev-project-template/project-library`
-- Documentation repo (GitHub): `https://github.com/sassycomapp/project-library-dev-project-template`
-- Documentation repo (GBrain): `dev-project-template`
 - Integration checked last: 2026-07-09 — OK
