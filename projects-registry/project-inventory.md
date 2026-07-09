@@ -1,10 +1,53 @@
-Source ID	Path	Role
-mb-3-cs	/mnt/c/projects/dev-mb-3-cs/mb-3-cs	Code
-mb-3-cs-project-library	/mnt/c/projects/dev-mb-3-cs/project-library	Docs
-mb4ecom	/mnt/c/projects/dev-mb4ecom/mb4ecom	Code
-mb4ecom-project-library	/mnt/c/projects/dev-mb4ecom/mb4ecom-project-library	Docs
-mb5pdlf	/mnt/c/projects/dev-mb5pdlf/mb5pdlf	Code
-mb5pdlf-project-library	/mnt/c/projects/dev-mb5pdlf/mb5pdlf-project-library	Docs
-pdlf	/mnt/c/pdlf	Framework/system
-scratch	/mnt/c/projects/scratch/scratch	Code
-scratch-project-library	/mnt/c/projects/scratch/scratch-project-library	Docs 
+---
+title: Project Inventory
+description: Certified project registry for all Anvil.works projects — local paths, GitHub repos, and GBrain sources verified
+version: 1.0
+date: 2026-07-09
+---
+
+## Registered Projects
+
+### mb-3-cs
+- Code repo (Local): `/mnt/c/dev/dev-mb-3-cs/mb-3-cs`
+- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/mb-3-cs`
+- Code repo (GBrain): `mb-3-cs-code`
+- Documentation repo (Local): `/mnt/c/dev/dev-mb-3-cs/project-library`
+- Documentation repo (GitHub): `https://github.com/sassycomapp/project-library`
+- Documentation repo (GBrain): `mb-3-cs-project-library`
+- Integration checked last: 2026-07-09 — OK
+
+### mb4ecom
+- Code repo (Local): `/mnt/c/dev/dev-mb4ecom/mb4ecom`
+- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/mb4ecom`
+- Code repo (GBrain): `mb4ecom-code`
+- Documentation repo (Local): `/mnt/c/dev/dev-mb4ecom/mb4ecom-project-library`
+- Documentation repo (GitHub): `https://github.com/sassycomapp/project-library-mb4ecom`
+- Documentation repo (GBrain): `mb4ecom-project-library`
+- Integration checked last: 2026-07-09 — OK
+
+### mb5pdlf
+- Code repo (Local): `/mnt/c/dev/dev-mb5pdlf/mb5pdlf`
+- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/mb5pdlf`
+- Code repo (GBrain): `mb5pdlf-code`
+- Documentation repo (Local): `/mnt/c/dev/dev-mb5pdlf/mb5pdlf-project-library`
+- Documentation repo (GitHub): `https://github.com/sassycomapp/project-library-mb5pdlf`
+- Documentation repo (GBrain): `mb5pdlf-project-library`
+- Integration checked last: 2026-07-09 — OK
+
+### dev-pdlf
+- Code repo (Local): `/mnt/c/dev/dev-pdlf`
+- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/dev-pdlf`
+- Code repo (GBrain): `dev-pdlf`
+- Documentation repo (Local): `/mnt/c/dev/dev-pdlf`
+- Documentation repo (GitHub): `https://github.com/sassycomapp/dev-pdlf`
+- Documentation repo (GBrain): `dev-pdlf`
+- Integration checked last: 2026-07-09 — OK
+
+### dev-project-template
+- Code repo (Local): `/mnt/c/dev/dev-project-template`
+- Code repo (Anvil/GitHub): `https://github.com/sassycomapp/project-library-dev-project-template`
+- Code repo (GBrain): `dev-project-template`
+- Documentation repo (Local): `/mnt/c/dev/dev-project-template/project-library`
+- Documentation repo (GitHub): `https://github.com/sassycomapp/project-library-dev-project-template`
+- Documentation repo (GBrain): `dev-project-template`
+- Integration checked last: 2026-07-09 — OK
