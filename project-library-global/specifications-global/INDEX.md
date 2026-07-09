@@ -25,4 +25,7 @@ Prefix convention: `spec-` = production specification, `mt-spec-` = placeholder/
 | `spec-testing.md` | Testing | Testing requirements |
 | `spec-ui-standards.md` | UI Standards | UI design and implementation |
 | `spec-vault-system.md` | Vault System | Vault/security architecture |
+| `spec-deployment.md` | Deployment | Anvil deployment, release, rollback |
+| `spec-api-specification.md` | API Specification | HTTP endpoints (webhooks, management) |
+| `spec-integration.md` | Integration | Brevo, Stripe, Paystack patterns |
 | `anvil-platform-standards.md` | Anvil Platform Standards | Duplicate of spec-anvil-platform-standards.md |
