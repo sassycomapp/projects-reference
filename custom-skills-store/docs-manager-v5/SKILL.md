@@ -53,10 +53,10 @@ Learnings entry, not a scope parameter. They are the floor the entire system sta
 2. **Phase 0 must run in full, in order, before Phase 1 (Scan) begins — every single
    invocation, no exceptions.** Phase 0 has two mandatory steps, both blocking: (a) `git status`
    on every in-scope Active Repository — if any is dirty, abort the entire run immediately with
-   the `REPOS_DIRTY` list, before backup or scan; (b) backup the in-scope file set and verify
-   the copy — if verification fails, abort with `BACKUP_FAILED`. Neither step may be skipped,
-   reordered, or asked about — invocation of `/docs-manager` is what triggers both, immediately
-   (Section 5).
+   the `REPOS_DIRTY` list, before backup or scan; (b) back up every discovered instance of the
+   five managed document types (Section 1.3, 1.4) and verify the copy — if verification fails,
+   abort with `BACKUP_FAILED`. Neither step may be skipped, reordered, or asked about —
+   invocation of `/docs-manager` is what triggers both, immediately (Section 5).
 3. **Docs Manager never runs `gbrain sync` or any GBrain command that changes state.** Only
    read-only GBrain inspection (e.g. `gbrain sources list`) is permitted, and only where Section
    3 explicitly calls for it.
@@ -456,12 +456,22 @@ clean, and only Docs Manager's own changes will ever appear in a commit.
 
 #### Step 1: Backup
 
-1. Compute the full in-scope file set (Section 1.1 minus Section 1.2) — the same set Phase 1
-   will walk.
-2. Copy that entire set to `C:\backup-docs-manager\<run-timestamp>\`, preserving relative
-   paths.
-3. Verify the copy: compare file count and total size (or checksums, if available) between
-   source scope and backup.
+**Backup scope is the five managed document types, not the full walk tree.** Copying the
+entire in-scope filesystem (everything Phase 1 walks for structural verification) would include
+enormous amounts of content Docs Manager never writes to — Phase 4 only ever modifies
+`docmap.md`, `project-inventory.md`, `README.md`, `AGENTS.md`, and `INDEX.md` files (Section
+1.3, 1.4), so only those need a safety copy.
+
+1. Perform a lightweight discovery pass across the in-scope walk (Section 1.1 minus Section
+   1.2) — the same exclusion rules Phase 1 uses — but only to locate every file matching one of
+   the five managed document types by name. This does not read or analyze content, just finds
+   the files.
+2. Copy exactly those files to `C:\backup-docs-manager\<run-timestamp>\`, preserving each
+   file's full relative path from `C:\` (so multiple `README.md` instances from different
+   folders don't collide).
+3. Verify the copy: compare file count between the discovered set and the backup. Full-tree
+   size comparison no longer applies since this isn't a full-tree copy — verify against the
+   discovery count instead.
 4. If verification fails for any reason, **abort the entire run** (Hard Constraint 2). No
    scan, no report, no changes. Return a failure notice to the developer with the
    `BACKUP_FAILED` reason.
@@ -871,8 +881,10 @@ Section 3.1 rules and propose adding it, same as any other new folder.
    sub-agent. No sub-agent ever writes to `C:\mybizz\logs\`.
 
 9. **Backup growth**: `C:\backup-docs-manager\` accumulates one timestamped snapshot per run
-   and is never itself scanned or pruned by this skill. Retention/cleanup of old backups is a
-   separate, manual concern — confirmed as an accepted tradeoff.
+   and is never itself scanned or pruned by this skill. Since backups now contain only the five
+   managed document types (a handful of small text files, not whole directory trees), this
+   growth is minor — but retention/cleanup of old snapshots is still a separate, manual concern,
+   not something this skill handles.
 
 10. **Repo-internal docs stay opaque, but the repo's existence doesn't**: Once a folder is
     classified as a code repo (Section 1.2.3), nothing inside it — including its own

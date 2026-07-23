@@ -1,5 +1,5 @@
 ---
-description: Pre-flight check and read-and-copy-only backup agent. First verifies every in-scope Active Repository is clean (git status), aborting the entire run if not. Then copies the full in-scope docs-manager walk set to a timestamped snapshot under /mnt/c/backup-docs-manager/ before any scan begins, and verifies the copy succeeded. Use for Phase 0 (pre-flight check + backup) of the docs-manager workflow. The backup step runs automatically, no developer approval required — it never modifies or deletes an original file, only creates copies. The git status read is read-only.
+description: Pre-flight check and read-and-copy-only backup agent. First verifies every in-scope Active Repository is clean (git status), aborting the entire run if not. Then discovers and copies only the five managed document types (docmap.md, project-inventory.md, README.md, AGENTS.md, INDEX.md) — not whole directory trees — to a timestamped snapshot under /mnt/c/backup-docs-manager/ before any scan begins, and verifies the copy succeeded. Use for Phase 0 (pre-flight check + backup) of the docs-manager workflow. The backup step runs automatically, no developer approval required — it never modifies or deletes an original file, only creates copies. The git status read is read-only.
 mode: subagent
 permission:
   edit: deny
@@ -40,32 +40,44 @@ run starts, every in-scope repo is already known to be clean.
 
 ### Step 1: Backup
 
-1. Compute the in-scope file set — the same scope Phase 1 (Scan) will walk:
+**Scope is the five managed document types, not the whole filesystem.** Docs Manager only ever
+writes to `docmap.md`, `project-inventory.md`, `README.md`, `AGENTS.md`, and `INDEX.md` files
+(SKILL.md Section 1.3, 1.4) — backing up entire directory trees (code-adjacent docs, archives,
+business files) would protect enormous amounts of content that can never actually change.
+
+1. Perform a discovery pass across the in-scope walk — same exclusion rules Phase 1 uses, but
+   only to locate files by name, not to read or analyze them:
    - Root: /mnt/c/ (all of it)
    - Exclude:
-     - Absolute path exclusions (SKILL.md Section 1.2.1)
+     - Absolute path exclusions (SKILL.md Section 1.2.1) — including /mnt/c/mybizz/skills,
+       a third-party installed tool with no matching name-pattern exclusion
      - Any directory named `.git` or `.opencode`, anywhere (Section 1.2.2)
      - Code repos: immediate child of /mnt/c/dev/dev-<slug>/ whose own name equals <slug> AND
-       contains anvil.yaml at its root (Section 1.2.3) — exclude entirely including README
+       contains anvil.yaml at its root (Section 1.2.3) — do not descend into confirmed code
+       repos. If a folder is `CODE_REPO_AMBIGUOUS` (matches only one of the two signals), do
+       not guess — include its README.md in the discovery pass, same as Phase 1 treats it as
+       unresolved rather than silently excluded.
      - Any folder whose name contains obsolete, backup, archive, gbrain, gstack, or opencode
        (or variations), except the three named exceptions (Section 1.2.4, 1.2.5):
        - /mnt/c/projects-reference/workspace-reference/gstack-reference
        - /mnt/c/projects-reference/workspace-reference/opencode reference
        - /mnt/c/projects-reference/workspace-reference/gbrain-reference
      - /mnt/c/backup-docs-manager itself (never back up the backup folder)
+   - Within what remains, locate every file named `docmap.md`, `project-inventory.md`,
+     `README.md`, `AGENTS.md`, or `INDEX.md` — nothing else.
 
-2. Create /mnt/c/backup-docs-manager/<run-timestamp>/ and copy the entire computed set into it,
-   preserving relative paths exactly.
+2. Create /mnt/c/backup-docs-manager/<run-timestamp>/ and copy exactly those discovered files
+   into it, preserving each file's full relative path from /mnt/c/ (so multiple `README.md`
+   instances from different folders land in distinct locations, not overwriting each other).
 
 3. Verify the copy:
-   - Compare total file count between source scope and the backup
-   - Compare total size between source scope and the backup
-   - If checksums are feasible within reasonable time, spot-check a sample; otherwise count +
-     size is sufficient
+   - Compare file count between the discovered set and the backup — they must match exactly
+   - If checksums are feasible within reasonable time, spot-check a sample; otherwise an exact
+     count match is sufficient
 
 4. Report the exact result — no vague language:
    - On success: "BACKUP VERIFIED — /mnt/c/backup-docs-manager/<run-timestamp>/ — <exact file
-     count> files, <exact size>"
+     count> files"
    - On failure: "BACKUP FAILED — <specific reason>"
 
 ## Rules
@@ -73,10 +85,8 @@ run starts, every in-scope repo is already known to be clean.
 - Do not perform any scanning, reporting, or reference resolution — that is Phase 1, a
   separate sub-agent
 - Do not modify, rename, or delete anything in the source scope under any circumstance
-- Do not guess on code-repo classification (Section 1.2.3 mismatch handling) — if a folder is
-  ambiguous, back it up anyway (backup is not the phase that excludes based on repo status
-  being uncertain; err toward including it in the backup) but do not editorialize about it —
-  that is Phase 1's job
+- Do not guess on code-repo classification — handled precisely in Step 1 (confirmed code repos
+  are never descended into; ambiguous ones contribute their README.md to discovery, nothing more)
 - If verification fails, do not retry automatically — report the failure and stop; the
   orchestrator aborts the entire run per Hard Constraint 2
 - If Step 0 finds any dirty repo, do not proceed to Step 1 at all — no backup is attempted
