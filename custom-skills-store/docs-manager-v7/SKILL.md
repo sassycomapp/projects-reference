@@ -7,7 +7,8 @@ description: |
   learnings cycle. Scans all in-scope documents for stale internal cross-references and
   directory drift.
 
-  Scope is exclusion-based: everything under C:\ is in scope except a defined blocklist
+  Scope is exclusion-based within three known division roots (C:\dev, C:\mybizz,
+  C:\projects-reference) — everything under them is in scope except a defined blocklist
   (system folders, code repos, backup/archive/obsolete folders, tooling folders). New
   documents and new code repos are picked up automatically as the filesystem grows — no
   manual list maintenance required.
@@ -55,8 +56,11 @@ Learnings entry, not a scope parameter. They are the floor the entire system sta
    on every in-scope Active Repository — if any is dirty, abort the entire run immediately with
    the `REPOS_DIRTY` list, before backup or scan; (b) back up every discovered instance of the
    five managed document types (Section 1.3, 1.4) and verify the copy — if verification fails,
-   abort with `BACKUP_FAILED`. Neither step may be skipped, reordered, or asked about —
-   invocation of `/docs-manager` is what triggers both, immediately (Section 5).
+   abort with `BACKUP_FAILED`. **"Verify" means a direct file count of the destination folder,
+   compared against the discovery count — creating the destination folder is not verification,
+   and a backup that produced an empty or short folder must never be reported as successful.**
+   Neither step may be skipped, reordered, or asked about — invocation of `/docs-manager` is
+   what triggers both, immediately (Section 5).
 3. **Docs Manager never runs `gbrain sync` or any GBrain command that changes state.** Only
    read-only GBrain inspection (e.g. `gbrain sources list`) is permitted, and only where Section
    3 explicitly calls for it.
@@ -74,10 +78,11 @@ learnings cycle.
 Internal cross-references between documents are also verified — a document referencing a path
 that no longer exists or has moved is flagged as an anomaly.
 
-Scope is defined by exclusion, not inclusion: everything under `C:\` is considered in scope
-unless it matches an exclusion rule (Section 1.2). This means new documents, new projects, and
-new code repos enter scope automatically as they're created — the developer maintains the
-exclusion rules, not a growing list of individual files.
+Scope is defined by exclusion within three known roots, not by an open-ended inclusion list:
+everything under `C:\dev\`, `C:\mybizz\`, and `C:\projects-reference\` (Section 1.1)
+is in scope unless it matches an exclusion rule (Section 1.2). This means new documents, new
+projects, and new code repos enter scope automatically as they're created within those three
+roots — the developer maintains the exclusion rules, not a growing list of individual files.
 
 The system also accumulates institutional memory over time (Section 4, Learnings) — judgment
 calls the developer makes once don't need to be re-made from scratch on every future run.
@@ -88,46 +93,52 @@ calls the developer makes once don't need to be re-made from scratch on every fu
 
 ### 1.1 Walk Root
 
-`C:\` (entire drive), minus everything in Section 1.2.
+The three top-level folders that make up the actively-managed Mybizz division, per `docmap.md`:
+
+```
+C:\dev
+C:\mybizz
+C:\projects-reference
+```
+
+Minus everything in Section 1.2. Nothing outside these three folders is ever walked, read, or
+backed up — this replaced an earlier "entire `C:\` drive minus a blocklist" design. That
+approach caused a real problem: a filename search across the whole drive returns thousands of
+irrelevant hits from installed software, npm packages, and Python environments anywhere on the
+system. Scoping to exactly the folders that `docmap.md` actually describes fixes this
+structurally (nothing outside them is searched at all) rather than by chasing an
+ever-growing blocklist, and it also shrinks how much of the filesystem Docs Manager can ever
+touch, which is worth having for its own sake.
+
+**`C:\pdlf\` is deliberately not a walk root.** It currently holds a placeholder — the remains
+of a first, aborted attempt at building the PDLF framework, kept only because it may show how
+that earlier attempt was structured. It isn't live, isn't being maintained, and scanning it
+would just generate noise about drift nobody is fixing. Once dev-PDLF concludes and the real
+framework is deployed there, `C:\pdlf\` should be reconsidered as a fourth walk root — this is
+noted explicitly in `docmap.md` Section 3 so the decision isn't only held in memory.
 
 ### 1.2 Exclusions
 
 #### 1.2.1 Absolute Path Exclusions
 
-Exact top-level matches — never entered, never walked:
+Exact matches within the three walk roots — never entered, never walked. Most of the exclusions
+that mattered under the old whole-drive design (`C:\Windows`, `C:\Program Files`, `C:\Users`,
+etc.) are no longer needed — they were never inside any of the three roots to begin with, so
+restricting the walk root already excludes them. Only exclusions that are actually nested
+*inside* one of the three roots
+three roots remain relevant:
 
 ```
-C:\Windows
-C:\appverifUI.dll
-C:\vfcompat.dll
-C:\$SysReset
-C:\$WinREAgent
-C:\.pnpm-store
-C:\_ BIG BACKUP
-C:\_BIG BACKUP 2
-C:\_Data-not mybizz
-C:\eSupport
-C:\Intel
-C:\MSOCache
-C:\OneDriveTemp
-C:\pdlf
-C:\PerfLogs
-C:\Program Files
-C:\Program Files (x86)
-C:\ProgramData
-C:\python
-C:\SSH
-C:\temp
-C:\Users
 C:\mybizz\skills
-C:\backup-docs-manager
 ```
 
 `C:\mybizz\skills\` was added here after the `project-inventory.md`/`git-repo-inventory.md`
 merge surfaced that it had no exclusion anywhere, unlike `gbrain`/`gstack` which happen to match
 the name-pattern rule below. It's a third-party, not-user-managed tool repo (Section 3.1,
 Installed Tools) — same category as `gbrain`/`gstack`, just with a name that doesn't match the
-pattern, so it needed an explicit absolute-path entry instead.
+pattern, so it needed an explicit absolute-path entry instead. `C:\backup-docs-manager` needs no
+exclusion here either now — it's a top-level `C:\` folder, not nested inside any of the three
+walk roots, so it's already outside scope by construction.
 
 #### 1.2.2 Config Directory Exclusions (recursive, by name, anywhere in scope)
 
@@ -177,6 +188,13 @@ Any folder whose name contains any of the following is excluded, along with its 
 - `backup` (or any variation/spacing thereof)
 - `archive`
 - `gbrain`, `gstack`, `opencode` (or any variation/spacing thereof)
+- `node_modules`, `.venv`, `venv`, `__pycache__`, `site-packages`, `vendor`, `.cache` (or any
+  variation thereof) — dependency and build-artifact directories. Restricting the walk root to
+  the three folders (Section 1.1) already removes most of the noise these caused when the walk
+  root was the whole drive, but if any tooling gets installed inside one of the three roots
+  (e.g. a `node_modules` folder inside a `project-library`), this is the second line of defense
+  so a single dependency install doesn't flood a scan or backup with irrelevant `README.md`
+  files bundled inside installed packages.
 
 #### 1.2.5 Exceptions to 1.2.4
 
@@ -462,16 +480,20 @@ enormous amounts of content Docs Manager never writes to — Phase 4 only ever m
 `docmap.md`, `project-inventory.md`, `README.md`, `AGENTS.md`, and `INDEX.md` files (Section
 1.3, 1.4), so only those need a safety copy.
 
+**Creating the destination folder is not the backup.** This failure has actually occurred: the
+timestamped folder gets created and the run proceeds as though the backup were complete, with
+nothing copied into it. Step 3 below exists specifically to catch this and is never skippable.
+
 1. Perform a lightweight discovery pass across the in-scope walk (Section 1.1 minus Section
    1.2) — the same exclusion rules Phase 1 uses — but only to locate every file matching one of
    the five managed document types by name. This does not read or analyze content, just finds
-   the files.
+   the files. Record the exact count.
 2. Copy exactly those files to `C:\backup-docs-manager\<run-timestamp>\`, preserving each
    file's full relative path from `C:\` (so multiple `README.md` instances from different
    folders don't collide).
-3. Verify the copy: compare file count between the discovered set and the backup. Full-tree
-   size comparison no longer applies since this isn't a full-tree copy — verify against the
-   discovery count instead.
+3. **Verify by directly counting files in the destination folder** (not by assuming the copy
+   succeeded) and comparing that number to the discovery count from Step 1. An empty or
+   short destination folder is `BACKUP_FAILED`, not a partial success to note and continue past.
 4. If verification fails for any reason, **abort the entire run** (Hard Constraint 2). No
    scan, no report, no changes. Return a failure notice to the developer with the
    `BACKUP_FAILED` reason.

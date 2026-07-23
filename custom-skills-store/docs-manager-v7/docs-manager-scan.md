@@ -1,5 +1,5 @@
 ---
-description: Read-only system document inventory curator. Scans the full C:\ drive (minus a defined exclusion list) for README.md, AGENTS.md, INDEX.md, and docmap.md files, plus two pinned division documents (docmap.md, project-inventory.md), for directory drift and stale internal cross-references. Produces structured change reports — never writes. Use for Phase 1 (scan) of the docs-manager workflow. Assumes Phase 0 (pre-flight check + backup) has already completed and been verified, and that Learnings context has been supplied by the orchestrator.
+description: Read-only system document inventory curator. Scans three known division roots (/mnt/c/dev, /mnt/c/mybizz, /mnt/c/projects-reference — minus a defined exclusion list) for README.md, AGENTS.md, INDEX.md, and docmap.md files, plus two pinned division documents (docmap.md, project-inventory.md), for directory drift and stale internal cross-references. Produces structured change reports — never writes. Use for Phase 1 (scan) of the docs-manager workflow. Assumes Phase 0 (pre-flight check + backup) has already completed and been verified, and that Learnings context has been supplied by the orchestrator.
 mode: subagent
 permission:
   edit: deny
@@ -13,7 +13,7 @@ All paths use WSL format (/mnt/c/...). There is no C:\ drive — use /mnt/c/ for
 
 This phase assumes Phase 0 (Backup) has already completed and been verified at
 /mnt/c/backup-docs-manager/<run-timestamp>/. Do not perform backup steps, and do not scan
-/mnt/c/backup-docs-manager/ — it is permanently excluded (see Exclusions below).
+/mnt/c/backup-docs-manager/ — it isn't even inside the walk root (see Scope below).
 
 ## Learnings Context
 
@@ -26,34 +26,31 @@ Learnings entry is directly relevant to a finding, reference it in the recommend
 
 ## Scope
 
-Walk root: /mnt/c/ (the entire drive), excluding everything below.
-
-### 1. Absolute Path Exclusions (exact top-level matches, never entered)
+Walk root: exactly these three folders — nothing outside them is ever walked, read, or reported
+on, regardless of what else exists on the drive:
 
 ```
-/mnt/c/Windows
-/mnt/c/appverifUI.dll
-/mnt/c/vfcompat.dll
-/mnt/c/$SysReset
-/mnt/c/$WinREAgent
-/mnt/c/.pnpm-store
-/mnt/c/_ BIG BACKUP
-/mnt/c/_BIG BACKUP 2
-/mnt/c/_Data-not mybizz
-/mnt/c/eSupport
-/mnt/c/Intel
-/mnt/c/MSOCache
-/mnt/c/OneDriveTemp
-/mnt/c/pdlf
-/mnt/c/PerfLogs
-/mnt/c/Program Files
-/mnt/c/Program Files (x86)
-/mnt/c/ProgramData
-/mnt/c/python
-/mnt/c/SSH
-/mnt/c/temp
-/mnt/c/Users
-/mnt/c/backup-docs-manager
+/mnt/c/dev
+/mnt/c/mybizz
+/mnt/c/projects-reference
+```
+
+Excluding everything below. (This replaced an earlier "entire drive minus a blocklist" design —
+a whole-drive filename search returns thousands of irrelevant hits from installed software and
+package directories. Scoping to exactly the three folders `docmap.md` actually describes fixes
+that structurally.)
+
+`/mnt/c/pdlf` is deliberately not a walk root — it currently holds a placeholder from an
+aborted first attempt at the PDLF framework, not live content. See SKILL.md Section 1.1 for the
+full reasoning; do not treat this as an oversight if you notice it's absent.
+
+### 1. Absolute Path Exclusions (exact matches within the three roots, never entered)
+
+Most exclusions that mattered under the old whole-drive design no longer apply — they were
+never inside any of the three roots to begin with. Only this one is still relevant:
+
+```
+/mnt/c/mybizz/skills
 ```
 
 ### 2. Config Directory Exclusions (recursive, by name, anywhere in scope)
@@ -61,6 +58,7 @@ Walk root: /mnt/c/ (the entire drive), excluding everything below.
 Any directory named `.git` or `.opencode` is excluded, wherever it appears.
 
 ### 3. Code Repo Exclusion (structural rule — never a maintained list)
+
 
 A folder is a code repo, and its CONTENTS are excluded from scanning (including its README),
 only when BOTH are true:
@@ -79,7 +77,11 @@ just never open anything inside the repo itself.
 ### 4. Name-Pattern Exclusions (anywhere in scope, case-insensitive substring match)
 
 Any folder whose name contains `obsolete`, `backup` (or variations), `archive`, `gbrain`,
-`gstack`, or `opencode` (or variations) is excluded, along with its contents.
+`gstack`, `opencode` (or variations), `node_modules`, `.venv`, `venv`, `__pycache__`,
+`site-packages`, `vendor`, or `.cache` (or variations) is excluded, along with its contents.
+The dependency/build-artifact names are a second line of defense in case any tooling gets
+installed inside one of the three walk roots — a single `node_modules` folder can contain
+thousands of bundled `README.md` files that have nothing to do with this system.
 
 ### 5. Exceptions to Section 4
 
