@@ -61,7 +61,7 @@ Read the project's `README.md` before every task alongside the `AGENTS.md` files
 
 | Folder | Purpose |
 |---|---|
-| `project-library-global/` | Shared resources: global ADRs, checklists, docs, policies, specifications, templates |
+| `C:\dev\project-library-global\` | Shared resources: global ADRs, checklists, docs, policies, specifications, templates |
 | `C:\dev\dev-*/` | Individual project workspaces (mb-3-cs, mb4ecom, mb5pdlf, pdlf, etc.) |
 
 ---

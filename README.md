@@ -2,7 +2,7 @@
 
 ## What this workspace is
 
-All projects in this workspace are Anvil.works projects. They all use the Anvil Material 3 theme, the M3 dependency, and the MUI overlay. Many aspects common to all projects are saved in `C:\projects\project-library-global` and referenced from all projects.
+All projects in this workspace are Anvil.works projects. They all use the Anvil Material 3 theme, the M3 dependency, and the MUI overlay. Many aspects common to all projects are saved in `C:\dev\project-library-global\` and referenced from all projects.
 
 All project repos, including `C:\projects`, are registered as sources on GBrain and configured with OpenCode, GStack, GitHub, and Matt Pocock skills.
 
@@ -67,7 +67,7 @@ All documents in `C:\projects\project-library-global` have been hurriedly and ha
 
 ## Project template
 
-`C:\projects\dev-project-template` is currently under development. It is intended to kick-start a new project — the developer copies the project-template into the new project and that folder becomes the project library for the new project.
+`C:\dev\project-template\` is currently under development. It is intended to kick-start a new project — the developer copies the project-template into the new project and that folder becomes the project library for the new project.
 
 When the dev-project-template project is complete, it will move into `C:\projects\project-library-global`.
 
@@ -95,4 +95,4 @@ It is possible for two or more projects to be in a state of development in the P
 
 Sync jobs can get stuck waiting — `gbrain serve` holds the PGLite lock. To resolve: stop `serve`, run sync/embed/extract via CLI, then restart `serve`.
 
-See: `C:\projects\dev-mb-3-cs\project-library\workspace\system-operation-reference\workflow reference\Daily operations.md` for help.
+See: `C:\projects-reference\workspace-reference\workflow reference\daily-ops.md` for help.
