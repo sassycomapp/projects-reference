@@ -1,321 +1,126 @@
 # Matt Pocock Skills Reference
 
-## What are Matt Pocock Skills?
+*Last confirmed: 2026-07-13, directly against a real `npx skills@latest add mattpocock/skills --agent opencode --yes` install log on your machine. This supersedes all prior web-research-based versions of this document — an actual install log is stronger evidence than anything fetched from GitHub, since it reflects what's really on your disk right now, not what a README claimed at some point.*
 
-Engineering and productivity skills for real software development with AI agents. They enforce domain language, architecture discipline, test-first development, and controlled handoffs. Not vibe coding.
+## ✅ RESOLVED: the `qa` situation was misdiagnosed — no overwrite occurred
+
+Correction to the earlier version of this section: GStack does not install through the generic `skills` CLI at all — it has its own installer, and for OpenCode it symlinks each individual skill (including `qa`) as a flat top-level entry directly into `~/.config/opencode/skills/`, pointing at the real source on `/mnt/c/mybizz/skills/`. **Confirmed directly: `~/.config/opencode/skills/qa -> /mnt/c/mybizz/skills/qa/` is intact and was never touched.**
+
+The actual situation: two separate directories both contain something named `qa` — GStack's real one (untouched, at `~/.config/opencode/skills/qa`) and Matt's stray conversational bug-reporting one (at `~/.agents/skills/qa`, installed as part of the 39-skill "General" bundle, never intended for use). No repair needed on GStack's side. The fix is just removing the stray:
+
+```bash
+npx skills remove qa
+```
+
+This only touches `~/.agents/skills/qa` (the generic tool's own managed directory) — leave `~/.config/opencode/skills/` alone entirely.
+
+**Same treatment recommended for `code-review`** — redundant with GStack's own `review` (confirmed also intact at `~/.config/opencode/skills/review`):
+
+```bash
+npx skills remove code-review
+```
+
+**Longer-term:** avoid reinstalling Matt's full 39-skill bundle again. Cherry-pick only what PDLF uses:
+```bash
+npx skills@latest add mattpocock/skills --skill domain-modeling --skill to-tickets --skill triage --skill improve-codebase-architecture --agent opencode --yes
+```
+
+**Confirmed by directly listing GStack's installed skill set:** the only exact-name collision between GStack's ~50 skills and Matt's 39 is `qa`. Everything else — including `to-spec` vs. GStack's own `spec`, a different slug — is fine as-is.
+
+**Bonus findings from this same listing, worth knowing about before writing more custom tooling:** GStack already ships `codex` ("multi-AI second opinion") and three named safety skills (`careful`, `freeze`, `guard`) — both directly relevant to earlier discussion in this conversation about gate-audit mechanisms and AI-runaway prevention. Worth looking at before building anything bespoke for either.
+
+---
+
+## Confirmed installed inventory (39 skills total)
+
+**"Mattpocock Skills" category (21) — the skills the vendor itself brands as core:**
+
+| Skill | Status vs. PDLF-New-Project-Mapping.md |
+|---|---|
+| `domain-modeling` | ✅ **Used** — Step 16 |
+| `to-tickets` | ✅ **Used** — Step 19. Confirms the `to-issues`→`to-tickets` rename researched earlier was correct and is now live on your disk. |
+| `triage` | ✅ **Used** — Step 39 |
+| `improve-codebase-architecture` | ✅ **Used** — Step 40 |
+| `to-spec` | ⛔ Present on disk, **deliberately not used**. Confirmed no downstream consumer in the pipeline — this was the correct call, and remains correct. Because it's now installed, double-check it isn't model-invoked into firing unprompted somewhere between Steps 12–18. |
+| `prototype` | ⛔ Present on disk, **deliberately not used**. Was removed from Step 25 as optional/non-chained. Same watch-item as `to-spec` — it's now confirmed model-invoked in general (per earlier v1.1.0 research), so confirm it isn't firing where you don't want it. |
+| `code-review` | Not currently assigned in PDLF. GStack's `/review` covers Step 37. See collision note above. |
+| `ask-matt` | Not currently assigned. Router/entry-point skill — informational value only inside a PDLF pipeline that already dictates its own sequencing. |
+| `codebase-design` | Not currently assigned. Reference vocabulary (Module/Interface/Depth/Seam), overlaps conceptually with `improve-codebase-architecture`. |
+| `diagnosing-bugs` | Not currently assigned in the mapping, but real and worth considering for ad hoc debugging work outside the formal pipeline. Confirms this name is still current — it was NOT renamed to `diagnose` as one transient web search suggested during earlier research; that appears to have been a stale/incorrect signal. |
+| `wayfinder` | Not currently assigned. Genuinely relevant to your **existing-project entry branch** discussion — its whole purpose is planning work too big for one session via a decision map, which has real conceptual overlap with what `step-03-resume-point-audit.md` is doing. Worth a deliberate look before writing that file, not necessarily to use it, but to check whether it does something your custom SOP doesn't. |
+| `implement` | Not currently assigned. Per earlier research this is the build-phase umbrella in Matt's own `ask-matt` routing (`idea → to-spec → to-tickets → implement`). PDLF's Step 35 (build loop) is handled natively by OpenCode per the skill-use principle — confirm `implement` doesn't add anything OpenCode's own build loop lacks before considering it. |
+| `research` | Not currently assigned. Background-agent, cited-source investigation. Could be a legitimate fit for the "genuinely open questions" that came up repeatedly this session (e.g., whether `/review`/`/qa` persist findings) — worth keeping in mind as a tool for future open questions, not a pipeline step. |
+| `tdd` | Not currently assigned as a named pipeline step — Step 35's three-level testing methodology is PDLF's own, older, and already validated against mb-3-cs. Confirm you don't want the two colliding conceptually. |
+| `setup-matt-pocock-skills` | Already run once, per your setup — confirmed present for future re-runs if tracker/domain config changes. |
+| `grill-with-docs`, `grill-me`, `grilling` | Not currently assigned as pipeline steps. GStack's `/office-hours` and `/plan-*-review` skills are doing PDLF's equivalent interrogation work. |
+| `handoff` | Not currently assigned. Worth knowing this exists as a lighter-weight alternative to the custom handoff documents you've been having me write by hand this session. |
+| `teach` | Not relevant to PDLF's pipeline. |
+| `writing-great-skills` | Not a pipeline step — this is the meta-skill governing how *we* write the stepwise files. Directly relevant to the skill-writing session you're about to start. |
+
+**"General" category (18) — not Matt Pocock's core engineering skillset; a broader bundle that came with the same install:**
+
+| Skill | Relevance to PDLF |
+|---|---|
+| `qa` | **Naming collision with GStack's own `qa` — GStack's copy confirmed untouched; remove Matt's stray copy. See resolved section at top of document.** |
+| `ubiquitous-language` | Conceptually adjacent to `domain-modeling` — don't confuse the two if either ever gets invoked; PDLF uses `domain-modeling` only. |
+| `request-refactor-plan` | Conceptually adjacent to `improve-codebase-architecture` — same caution. |
+| `resolving-merge-conflicts` | Not currently relevant — no PDLF step involves manual merge conflict resolution as a named procedure. |
+| `design-an-interface`, `setup-ts-deep-modules` | TypeScript/interface-design oriented — limited relevance to an Anvil/Python project. |
+| `claude-handoff`, `loop-me`, `wizard` | Generic utility skills, no current PDLF assignment. |
+| `writing-beats`, `writing-fragments`, `writing-shape`, `edit-article`, `obsidian-vault` | Creative writing / note-taking skills — not software engineering, not relevant to PDLF at all. Their presence tells you this install pulled in the vendor's *entire* multi-purpose skill catalog, not a curated engineering subset. |
+| `git-guardrails-claude-code` | Blocks dangerous git commands. Worth considering independent of PDLF, as a safety net given how much git automation the pipeline does — genuinely useful, low-risk to keep. |
+| `migrate-to-shoehorn`, `scaffold-exercises`, `setup-pre-commit` | Narrow, tool-specific utilities. `setup-pre-commit` (Husky/lint-staged/Prettier/type-check/tests) may be worth a look given the earlier finding that no CI infrastructure was confirmed for Steps 35A/38A — but it's a Node.js-ecosystem tool, so its fit for a Python/Anvil project needs checking before assuming it applies. |
+
+---
+
+## What this changes for PDLF's skill selection: **nothing in the mapping itself, one real action item**
+
+The four skills PDLF actually uses (`domain-modeling`, `to-tickets`, `triage`, `improve-codebase-architecture`) are all confirmed present, correctly named, matching the mapping exactly. **No change to `PDLF-New-Project-Mapping.md` is needed.**
+
+The one concrete action: **resolve the `qa` collision before Step 38 is ever actually run**, per the instructions at the top of this document. Everything else above is context and future-reference, not an immediate blocker.
+
+---
+
+## The bigger pattern: this repo ships like a live product
+
+Confirmed again by this install: 39 skills, spanning categories ("Mattpocock Skills" vs. "General") that didn't exist in earlier research passes on this same repo. Expect this to keep growing and shifting. The install log is now your best source of truth — better than anything web-researched, including the sections below, which remain useful for *behavioral* detail (what a skill does, how it's invoked) that a bare install log doesn't show.
+
+```bash
+ls ~/.agents/skills/
+cat ~/.agents/.skill-lock.json
+```
+
+Re-run and re-diff after every update.
 
 **Source:** `github.com/mattpocock/skills` (MIT) | **Installed:** `~/.agents/skills/<name>/SKILL.md` | **Lock file:** `~/.agents/.skill-lock.json`
 
-**Install/update:** `npx skills@latest add mattpocock/skills`
+**Install/update:** `npx skills@latest add mattpocock/skills --agent opencode --yes`
 
 ---
 
-## Skills Catalog (18 installed)
+## Behavioral detail on the skills PDLF actually uses
 
-### Engineering — User-invoked (type the command)
+### `domain-modeling` (Step 16)
 
-| Skill | What it does |
-|---|---|
-| `/ask-matt` | Router — which skill fits your situation |
-| `/grill-with-docs` | Relentless interview + builds domain glossary + ADRs |
-| `/triage` | Move issues through state machine (needs-triage → closed) |
-| `/improve-codebase-architecture` | Codebase scan + visual HTML report + grill on chosen candidate |
-| `/setup-matt-pocock-skills` | Per-repo config scaffold — run once per repo |
-| `/to-prd` | Turn conversation into PRD, publish to issue tracker |
-| `/to-issues` | Break PRD/spec into independent issues using tracer-bullet slices |
-| `/prototype` | Build throwaway prototype to answer a design question |
+Active discipline: challenge terms against the glossary, sharpen fuzzy language, discuss concrete scenarios, cross-reference with code. `CONTEXT.md` updates inline the moment a term resolves — never batched. ADRs offered only when hard-to-reverse, surprising, and the result of a genuine trade-off. `CONTEXT.md` must stay "totally devoid of implementation details" — a glossary and nothing else.
 
-### Engineering — Model-invoked (agent uses automatically)
+### `to-tickets` (Step 19)
 
-| Skill | What it does |
-|---|---|
-| `/domain-modeling` | Build/sharpen domain glossary + ADRs (called by grill-with-docs) |
-| `/tdd` | Red-green-refactor test-driven development |
-| `/diagnosing-bugs` | Reproduce → minimise → hypothesise → instrument → fix → regression test |
-| `/codebase-design` | Deep module design vocabulary and patterns |
+Breaks a plan/spec/conversation into tracer-bullet vertical-slice tickets, or — for a wide refactor with a large blast radius — an expand→migrate→contract sequence. Writes to whatever the project's `### Issue tracker` block in `CLAUDE.md`/`AGENTS.md` points at (per your setup, `.scratch/`) — never a hardcoded path.
 
-### Productivity — User-invoked
+### `triage` (Step 39)
 
-| Skill | What it does |
-|---|---|
-| `/grill-me` | Relentless interview about a plan (no docs created) |
-| `/handoff` | Compact conversation into handoff document for another agent |
-| `/teach` | Multi-session teaching workspace with lessons, references, learning records |
-| `/writing-great-skills` | Reference for writing and editing skills well |
+Five-state role machine: `needs-triage` → `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`. Every posted comment must open with the mandatory AI-disclaimer line. Processes whatever's actually in the tracker — has no opinion about how it got there, which is why Steps 37/38's confirmed artifact-persistence requirement matters so much for this step to have real work to do.
 
-### Productivity — Model-invoked
+### `improve-codebase-architecture` (Step 40)
 
-| Skill | What it does |
-|---|---|
-| `/grilling` | The interview loop behind grill-me and grill-with-docs |
-
-### Utility
-
-| Skill | What it does |
-|---|---|
-| `/find-skills` | Discover and install new skills (from vercel-labs/skills) |
+Read-only. Explores the codebase, writes an HTML report to your OS temp directory (never the repo), and only drops into a design conversation if you pick a candidate from the report. Does not touch code — any resulting change goes through Step 40B with your explicit approval first.
 
 ---
 
-## Invocation Rules
+## Setup skill recap (`setup-matt-pocock-skills`)
 
-- **User-invoked** — only reachable when you type them (e.g. `/grill-me`). They orchestrate.
-- **Model-invoked** — reachable when typed OR automatically by the agent when the task fits. They hold reusable discipline.
-- A user-invoked skill may call model-invoked skills, but never another user-invoked one.
-
----
-
-## Where Skills Write Output
-
-### In the project (default behavior)
-
-| Skill | Writes to | When |
-|---|---|---|
-| `/domain-modeling` | `CONTEXT.md` (glossary) + `adr/` (ADRs) | Creates lazily when terms crystallize |
-| `/grill-with-docs` | Same as domain-modeling (calls it internally) | During interview |
-| `/to-prd` | `.scratch/<feature>/<prd-slug>.md` | When publishing PRD |
-| `/to-issues` | `.scratch/<feature>/<issue-slug>.md` | When breaking into tasks |
-| `/triage` | `.scratch/` (updates issue files in-place) | When processing issues |
-| `/triage` (rejected) | `.out-of-scope/<topic>.md` | When rejecting issues |
-| `/setup-matt-pocock-skills` | `docs/agents/` (3 config files) + `AGENTS.md` | Once per repo |
-| `/tdd`, `/diagnosing-bugs`, `/prototype` | In-place in codebase | During implementation |
-
-### Outside the project
-
-| Skill | Writes to | Why |
-|---|---|---|
-| `/handoff` | `%TEMP%` + copy to `matt-skills-output/` | Temp for agent pickup + permanent copy |
-| `/improve-codebase-architecture` | `%TEMP%` + copy to `matt-skills-output/` | HTML report |
-| `/teach` | `C:\mybizz\matt-skills-teach` | Shared teaching workspace across all projects |
-
-### Nothing on disk
-
-`/ask-matt`, `/grill-me`, `/grilling`, `/find-skills`, `/writing-great-skills`, `/codebase-design` — conversational or reference only.
-
----
-
-## Skill I/O Map — Inputs, Outputs, and Chains
-
-### How skills find their input
-
-| Skill | Input type | Where it looks | Reads from previous skill |
-|---|---|---|---|
-| `/office-hours` | User prompt (product idea) | Conversation context | — (starting point) |
-| `/plan-ceo-review` | Plan file | Conversation plan file + `~/.gstack/projects/{SLUG}/ceo-plans/*.md` | `/office-hours` output |
-| `/plan-eng-review` | Plan file | Conversation plan file + `~/.gstack/projects/{SLUG}/*-design-*.md` | `/office-hours`, `/plan-ceo-review` |
-| `/plan-design-review` | Plan file with UI/UX | Conversation plan file + `DESIGN.md` | `/office-hours`, `/plan-ceo-review` |
-| `/plan-devex-review` | Plan file (dev-facing) | Conversation plan file | `/office-hours` |
-| `/design-consultation` | Product context | Conversation + `~/.gstack/projects/{SLUG}/*office-hours*` + `DESIGN.md` | `/office-hours` |
-| `/design-shotgun` | Design brief | Conversation + `DESIGN.md` + `~/.gstack/projects/{SLUG}/*office-hours*` | `/office-hours`, `/design-consultation` |
-| `/design-html` | Approved mockup or plan | `~/.gstack/projects/{SLUG}/designs/*/approved.json` + `DESIGN.md` | `/design-shotgun` (via `approved.json`) |
-| `/design-review` | Live site URL | URL argument + `DESIGN.md` + browse screenshots | — (standalone) |
-| `/to-prd` | Conversation context | Current conversation + codebase + `CONTEXT.md` + ADRs | — (synthesizes conversation) |
-| `/to-issues` | PRD or spec | Conversation context or issue reference argument + `CONTEXT.md` + ADRs | `/to-prd` (if PRD was just created) |
-| `/triage` | Issue/PR | `.scratch/<feature>/*.md` (issue files) + `.out-of-scope/*.md` + `CONTEXT.md` | — (reads issue tracker) |
-| `/review` | Git diff | `git diff <base>...HEAD` + plan file + `TODOS.md` | — (standalone) |
-| `/qa` | Target URL or diff | URL argument or git diff + browse binary | — (standalone) |
-| `/ship` | Git diff + plan | `git diff` + plan file + `TODOS.md` + `VERSION` + `CHANGELOG.md` | `/review` (checks readiness) |
-| `/spec` | User's vague intent | Conversation + codebase + `gh issue list` (dedupe) | — (standalone) |
-| `/investigate` | Bug report | Conversation + `git log` + codebase + `learnings.jsonl` | — (standalone) |
-| `/improve-codebase-architecture` | Codebase | Full repo + `CONTEXT.md` + ADRs + `/codebase-design` vocabulary | — (standalone) |
-| `/context-save` | Git state | `git status`, `git diff`, `git log`, conversation | — (captures current state) |
-| `/context-restore` | Saved context | `~/.gstack/projects/{SLUG}/checkpoints/*.md` | `/context-save` |
-| `/retro` | Git history | `git log --since=<window>` + `timeline.jsonl` + `learnings.jsonl` | — (standalone) |
-| `/tdd` | Feature/bug spec | Conversation + `CONTEXT.md` + ADRs | `/to-issues` (if issues were created) |
-| `/diagnosing-bugs` | Bug report | Conversation + codebase + `CONTEXT.md` + ADRs | — (standalone) |
-
-### How skills save their output
-
-| Skill | Output type | Where it saves | Consumed by |
-|---|---|---|---|
-| `/office-hours` | Design doc | `~/.gstack/projects/{SLUG}/*-design-*.md` | `/plan-ceo-review`, `/plan-eng-review`, `/design-consultation` |
-| `/plan-ceo-review` | CEO plan | `~/.gstack/projects/{SLUG}/ceo-plans/*.md` + plan file | `/plan-eng-review`, `/plan-design-review` |
-| `/plan-eng-review` | Eng review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` (checks readiness) |
-| `/plan-design-review` | Design review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` |
-| `/plan-devex-review` | DX review | Plan file (adds `## GSTACK REVIEW REPORT`) | `/ship` |
-| `/design-consultation` | DESIGN.md | `DESIGN.md` in repo root + `~/.gstack/projects/{SLUG}/designs/` | `/design-shotgun`, `/design-html`, `/design-review` |
-| `/design-shotgun` | Design variants | `~/.gstack/projects/{SLUG}/designs/{session}/variant-*.png` + `board.html` + `approved.json` | `/design-html` (reads `approved.json`) |
-| `/design-html` | HTML/CSS | `~/.gstack/projects/{SLUG}/designs/*/finalized.html` | — (end of design pipeline) |
-| `/design-review` | Fix commits | Source code (atomic commits) + `.gstack/qa-reports/` | — (end of review) |
-| `/to-prd` | PRD | `.scratch/<feature>/<prd-slug>.md` | `/to-issues` |
-| `/to-issues` | Issues | `.scratch/<feature>/<issue-slug>.md` | `/triage`, `/tdd` |
-| `/triage` | Issue updates | `.scratch/` (in-place) + `.out-of-scope/<topic>.md` (rejections) | — (issue tracker) |
-| `/review` | Review report | Prose output (conversation) | `/ship` |
-| `/qa` | Fix commits + report | Source code + `.gstack/qa-reports/` | — (end of QA) |
-| `/ship` | PR + version bump | GitHub PR + `VERSION` + `CHANGELOG.md` + `TODOS.md` | `/land-and-deploy` |
-| `/spec` | GitHub issue | GitHub issue + `~/.gstack/projects/{SLUG}/specs/*.md` | `/to-issues` (if breaking into tasks) |
-| `/investigate` | Fix + learning | Source code (commit) + `learnings.jsonl` | — (end of investigation) |
-| `/improve-codebase-architecture` | HTML report | `%TEMP%/architecture-review-*.html` + copy to `matt-skills-output/` | `/handoff` |
-| `/context-save` | Checkpoint | `~/.gstack/projects/{SLUG}/checkpoints/*.md` | `/context-restore` |
-| `/retro` | Retro report | `~/.gstack/projects/{SLUG}/retros/*.md` | — (reference) |
-| `/tdd` | Tests + code | In-place in codebase | — (end of TDD) |
-| `/diagnosing-bugs` | Fix + regression test | In-place in codebase | — (end of diagnosis) |
-| `/handoff` | Handoff doc | `%TEMP%/handoff-*.md` + copy to `matt-skills-output/` | `/context-restore` (next session) |
-
-### GStack internal paths
-
-Skills reference `~/.gstack/projects/{SLUG}/` where SLUG is derived from the git remote URL. Current SLUGs:
-
-| Project | SLUG | GStack path |
-|---|---|---|
-| projects (root) | `sassycomapp-projects-mgt` | `~/.gstack/projects/sassycomapp-projects-mgt/` |
-| mb-3-cs project-library | `sassycomapp-project-library` | `~/.gstack/projects/sassycomapp-project-library/` |
-| mb4ecom project-library | `sassycomapp-project-library-mb4ecom` | `~/.gstack/projects/sassycomapp-project-library-mb4ecom/` |
-| mb5pdlf project-library | `sassycomapp-project-library-mb5pdlf` | `~/.gstack/projects/sassycomapp-project-library-mb5pdlf/` |
-| dev-pdlf | `sassycomapp-dev-pdlf` | `~/.gstack/projects/sassycomapp-dev-pdlf/` |
-
-These directories are created on first skill use. Subdirectories (`ceo-plans/`, `designs/`, `checkpoints/`, `retros/`, `specs/`, `security-audits/`, `health/`, `qa-reports/`) are created as needed.
-
----
-
-## Path Verification (as of 2026-07-08, all fixed)
-
-### Project-local paths (all verified OK)
-
-| Path | mb-3-cs | mb4ecom | mb5pdlf | dev-pdlf | Notes |
-|---|---|---|---|---|---|
-| `CONTEXT.md` | Yes | No | No | No | Created lazily by `/domain-modeling` or `/grill-with-docs` |
-| `DESIGN.md` | No | No | No | No | Created by `/design-consultation` |
-| `adr/` | Yes | Yes | Yes | Yes | Created when first ADR is written |
-| `.scratch/` | Yes | Yes | Yes | Yes | Issue tracker directory |
-| `.out-of-scope/` | Yes | Yes | Yes | Yes | Rejected issues |
-| `matt-skills-output/` | Yes | Yes | Yes | Yes | Copies of handoff + architecture reports |
-| `gstack-outputs/` | Yes | Yes | Yes | Yes | GStack skill outputs |
-| `docs/agents/issue-tracker.md` | Yes | Yes | Yes | Yes | Issue tracker config |
-| `docs/agents/triage-labels.md` | Yes | Yes | Yes | Yes | Triage label vocabulary |
-| `docs/agents/domain.md` | Yes | Yes | Yes | Yes | Domain doc consumption rules |
-| `CLAUDE.md` | Yes | No | No | No | Created by `/setup-matt-pocock-skills` |
-
-### GStack internal paths (all verified OK)
-
-| Path | Exists? | Notes |
-|---|---|---|
-| `~/.gbrain/config.json` | Yes | GBrain config |
-| `~/.gbrain/brain.pglite/` | Yes | GBrain database |
-| `~/.gstack/` | Yes | GStack home |
-| `~/.gstack/.gbrain-sync-state.json` | Yes | Sync state |
-| `~/.gstack/projects/sassycomapp-project-library/` | Yes | mb-3-cs SLUG path with all 8 subdirs |
-| `~/.gstack/projects/sassycomapp-project-library-mb4ecom/` | Yes | mb4ecom SLUG path with all 8 subdirs |
-| `~/.gstack/projects/sassycomapp-project-library-mb5pdlf/` | Yes | mb5pdlf SLUG path with all 8 subdirs |
-| `~/.gstack/projects/sassycomapp-dev-pdlf/` | Yes | dev-pdlf SLUG path with all 8 subdirs |
-| `~/.agents/skills/` | Yes | 18 Matt Pocock skills installed |
-| `~/.agents/.skill-lock.json` | Yes | Lock file |
-| `C:\mybizz\matt-skills-teach` | Yes | Shared teaching workspace |
-
-### GStack SLUG subdirectories (all verified OK for all 4 projects)
-
-Each `~/.gstack/projects/{SLUG}/` contains: `ceo-plans/`, `designs/`, `checkpoints/`, `retros/`, `specs/`, `security-audits/`, `health/`, `qa-reports/`
-
----
-
-## The Domain Model System
-
-The most powerful technique in the toolkit. Creates a shared language between you and the agent.
-
-**How it works:**
-1. Run `/grill-with-docs` on a new feature
-2. Agent asks detailed questions about your design
-3. As you answer, it builds a glossary in `CONTEXT.md` and writes ADRs
-4. Future sessions read this context — the agent already knows your jargon
-
-**Example:**
-- Before: "There's a problem when a lesson inside a section of a course is given a spot in the file system"
-- After: "There's a problem with the materialization cascade"
-
-This concision pays off every session. Variables, functions, and files get named consistently. The agent spends fewer tokens thinking because it has concise language.
-
----
-
-## Workflows
-
-### New Feature (full pipeline)
-```
-/grill-with-docs → /prototype → /to-prd → /to-issues → /tdd → /handoff
-```
-
-### Bug Fix
-```
-/triage → /diagnosing-bugs
-```
-
-### Architecture Health Check
-```
-/improve-codebase-architecture → /handoff
-```
-
-### Learning
-```
-/teach
-```
-
----
-
-## Per-Repo Setup
-
-`/setup-matt-pocock-skills` creates three config files in `docs/agents/`:
-
-| File | Purpose |
-|---|---|
-| `docs/agents/issue-tracker.md` | Where issues live (GitHub, GitLab, or local `.scratch/`) |
-| `docs/agents/triage-labels.md` | Label vocabulary for `/triage` (5 canonical labels) |
-| `docs/agents/domain.md` | How skills consume domain docs (CONTEXT.md, ADRs) |
-
-**Current setup:** All projects use local markdown issue tracker (`.scratch/`) with default triage labels.
-
-| Project | CONTEXT.md | docs/agents | .scratch | .out-of-scope | matt-skills-output |
-|---|---|---|---|---|---|
-| mb-3-cs | Bootstrapped | 3 files | Yes | Yes | Yes |
-| mb4ecom | Lazy create | 3 files | Yes | Yes | Yes |
-| mb5pdlf | Lazy create | 3 files | Yes | Yes | Yes |
-| dev-pdlf | Lazy create | 3 files | Yes | Yes | Yes |
-
----
-
-## Integration with GStack and PDLF
-
-Matt Pocock skills complement GStack and PDLF — they don't replace them.
-
-| Layer | Tool | Role |
-|---|---|---|
-| Orchestration | PDLF | Full project lifecycle, stage-gated |
-| Workflow | GStack | Planning reviews, QA, review, ship |
-| Engineering discipline | Matt Pocock | Domain modeling, TDD, architecture, debugging, handoffs |
-
-PDLF integration points:
-- PDLF Step 2 calls `/to-prd` to create the PRD
-- PDLF Step 5 calls `/domain-modeling` to lock the domain model
-- PDLF Step 7 calls `/to-issues` to break into tasks
-- PDLF Step 16 uses `/tdd` for test-first builds
-- PDLF Step 21 optionally calls `/improve-codebase-architecture`
-
----
-
-## Artifact Governance (per AGENTS.md)
-
-These overrides are applied in each project's AGENTS.md:
-
-| Skill | Default destination | Override |
-|---|---|---|
-| `domain-modeling`, `grill-with-docs` (ADRs) | `docs/adr/` | → `adr/` |
-| `domain-modeling`, `grill-with-docs` (context) | `CONTEXT.md` | No change |
-| `to-prd`, `to-issues`, `triage` | `.scratch/` | No change |
-| `handoff`, `improve-codebase-architecture` | `%TEMP%` only | + copy to `matt-skills-output/` |
-| `teach` | Invoking directory | → `C:\mybizz\matt-skills-teach` |
-| Others | — | Ask before saving |
-
----
-
-## File Locations
-
-| Item | Location |
-|---|---|
-| Skills (installed) | `~/.agents/skills/<name>/SKILL.md` |
-| Lock file | `~/.agents/.skill-lock.json` |
-| Teaching workspace | `C:\mybizz\matt-skills-teach` |
-| Per-project config | `<project>/docs/agents/` |
-| Per-project issues | `<project>/.scratch/` |
-| Per-project glossary | `<project>/CONTEXT.md` |
-| Per-project outputs | `<project>/matt-skills-output/` |
+Explores git remotes, existing `CLAUDE.md`/`AGENTS.md`, `CONTEXT.md`/`CONTEXT-MAP.md`, `docs/adr/`, existing `docs/agents/`. Asks three questions in sequence, not at once: issue tracker choice, triage label mapping, domain doc layout (single- vs. multi-context). Writes an `## Agent skills` block into whichever of `CLAUDE.md`/`AGENTS.md` exists (never creates a duplicate, never creates one if the other exists), plus `docs/agents/issue-tracker.md`, `triage-labels.md`, `domain.md`.
 
 ---
 
@@ -323,57 +128,8 @@ These overrides are applied in each project's AGENTS.md:
 
 | Problem | Fix |
 |---|---|
-| Skill not in picker | Verify `~/.agents/skills/<name>/SKILL.md` exists |
-| Skill can't find issue tracker | Check `docs/agents/issue-tracker.md` exists |
-| Agent doesn't know domain terms | `CONTEXT.md` missing or empty — run `/grill-with-docs` |
-| `/triage` errors about .out-of-scope/ | Create directory: `mkdir .out-of-scope` |
-| Handoff not saved to matt-skills-output/ | Check directory exists and AGENTS.md has governance rule |
-| `/teach` writes to wrong directory | Check AGENTS.md redirects to `C:\mybizz\matt-skills-teach` |
-
----
-
-## Workflow Pipelines
-
-### New Feature (full pipeline)
-```
-/grill-with-docs → /prototype → /to-prd → /to-issues → /tdd → /handoff
-```
-Grill to align on design and build domain model, prototype to test the design, publish PRD, break into issues, build test-first, hand off.
-
-### Bug Fix
-```
-/triage → /diagnosing-bugs
-```
-Process bug through triage state machine, then disciplined diagnosis loop.
-
-### Architecture Health Check
-```
-/improve-codebase-architecture → /handoff
-```
-Scan codebase for deepening opportunities, generate HTML report, grill on chosen candidate, hand off for implementation.
-
-### Domain Model Building
-```
-/grill-with-docs → /domain-modeling
-```
-Grill-with-docs calls domain-modeling internally. Run standalone `/domain-modeling` when you want to sharpen terms without a full grilling session.
-
-### Issue Processing
-```
-/triage → /to-issues → /tdd
-```
-Triage incoming issues, break ready ones into tasks, build test-first.
-
-### Learning
-```
-/teach
-```
-Creates a multi-session teaching workspace with lessons, references, and learning records.
-
-### Quick Decision: Which Skill?
-
-Not sure which skill to use? Start with:
-```
-/ask-matt
-```
-It routes you to the right skill based on your situation.
+| Matt's stray `qa`/`code-review` alongside GStack's real ones | Not an overwrite — GStack's copies are untouched at `~/.config/opencode/skills/`. Remove Matt's: `npx skills remove qa` and `npx skills remove code-review` |
+| Skill not in picker | `ls ~/.agents/skills/<name>/SKILL.md` — name may have changed upstream again |
+| `to-tickets` or `triage` can't find the tracker | Check `docs/agents/issue-tracker.md` exists and the `### Issue tracker` block is present in `CLAUDE.md`/`AGENTS.md` |
+| `domain-modeling` seems to know nothing | `CONTEXT.md` missing/empty — expected until the first term resolves |
+| `improve-codebase-architecture` seems to be editing code directly | It shouldn't — it's read-only by design. If you're seeing direct edits, something is invoking a different skill or acting outside the documented procedure; investigate before trusting the output. |
