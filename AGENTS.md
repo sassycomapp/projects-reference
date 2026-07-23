@@ -4,7 +4,7 @@
 
 ## Project purpose
 
-This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), the project template (`dev-project-template/`), and global reference documents. Individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`) are located in `C:\dev\`. Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects` workspace itself.
+This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), the project template (`dev-project-template/`), and global reference documents. Individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`) are located in `C:\dev\`. Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects-reference\` workspace itself.
 
 ---
 
@@ -15,7 +15,7 @@ This is the umbrella workspace for all Anvil.works projects. It houses shared re
 - **Task** — a discrete unit of work with a defined completion condition.
 - **Gate** — a checkpoint requiring explicit user approval before proceeding.
 - **Artifact** — any file produced during a session: reports, reviews, wireframes, screens, checklists, docs, ADRs.
-- **project-library-global** — shared resource folder at `C:\projects\project-library-global/`.
+- **project-library-global** — shared resource folder at `C:\dev\project-library-global/`.
 
 ---
 
@@ -68,7 +68,7 @@ Read the project's `README.md` before every task alongside the `AGENTS.md` files
 
 ## Artifact governance
 
-When working in a specific project, follow that project's artifact governance. When working at the `C:\projects` level, save to the relevant project's output folder.
+When working in a specific project, follow that project's artifact governance. When working at the `C:\projects-reference` level, save to the relevant project's output folder.
 
 Global file routing:
 
@@ -112,4 +112,4 @@ Fact rule: do not use training data or memory for project-specific facts. GBrain
 
 ## Task completion reporting
 
-When working in a project, follow that project's reporting mechanics. When at `C:\projects` level, reports go to the relevant project's `opencode-outputs/` folder.
+When working in a project, follow that project's reporting mechanics. When at `C:\projects-reference` level, reports go to the relevant project's `opencode-outputs/` folder.

@@ -1,10 +1,10 @@
-# C:\projects — Workspace Overview
+# C:\projects-reference — Workspace Overview
 
 ## What this workspace is
 
 All projects in this workspace are Anvil.works projects. They all use the Anvil Material 3 theme, the M3 dependency, and the MUI overlay. Many aspects common to all projects are saved in `C:\dev\project-library-global\` and referenced from all projects.
 
-All project repos, including `C:\projects`, are registered as sources on GBrain and configured with OpenCode, GStack, GitHub, and Matt Pocock skills.
+All project repos, including `C:\projects-reference`, are registered as sources on GBrain and configured with OpenCode, GStack, GitHub, and Matt Pocock skills.
 
 ---
 
@@ -17,7 +17,7 @@ Every Anvil-based project has two repos:
 | **Code repo** | Live Anvil code + `anvil.yaml`. Goes to Anvil via GitHub VC. |
 | **Documentation repo** (`project-library/`) | Planning, docs, ADRs, wireframes, specifications. Does NOT go to Anvil. |
 
-Project folders only hold documentation which is durable and canonical to that specific project. Everything general or global lives in `C:\projects`.
+Project folders only hold documentation which is durable and canonical to that specific project. Everything general or global lives in `C:\projects-reference`.
 
 ---
 
@@ -27,7 +27,7 @@ Project folders only hold documentation which is durable and canonical to that s
 |---|---|
 | `spec-` | Specifications |
 | `policy-` | Policy documents |
-| `ADR-` | Architecture Decision Records |
+| `adr-` | Architecture Decision Records |
 | (No prefix) | Canonical durable project documents |
 | `screen-` | Screens (HTML docs) |
 | `wireframe-` | Wireframes (HTML docs) |
@@ -40,7 +40,7 @@ Project folders only hold documentation which is durable and canonical to that s
 
 ## Shared resources: project-library-global
 
-`C:\projects\project-library-global` holds folders containing files shared across all projects. These folders have the suffix `-global`. They are maintained in a central repository for ease of maintenance and updating, so that different copies of the same files do not accumulate across projects.
+`C:\dev\project-library-global` holds folders containing files shared across all projects. These folders have the suffix `-global`. They are maintained in a central repository for ease of maintenance and updating, so that different copies of the same files do not accumulate across projects.
 
 | Folder | Contents |
 |---|---|
@@ -61,7 +61,7 @@ No project will use all the global ADR documents, checklists, policies, specific
 
 ### State of global documents
 
-All documents in `C:\projects\project-library-global` have been hurriedly and haphazardly assembled. Many have been copied in directly from other project folders. The documents need to be updated and in some cases created. Documents with the prefix `mt-` or empty documents require writing. Some folders only have a single document, which is really just a placeholder for the documents that must be created in that folder.
+All documents in `C:\dev\project-library-global` have been hurriedly and haphazardly assembled. Many have been copied in directly from other project folders. The documents need to be updated and in some cases created. Documents with the prefix `mt-` or empty documents require writing. Some folders only have a single document, which is really just a placeholder for the documents that must be created in that folder.
 
 ---
 
@@ -69,7 +69,7 @@ All documents in `C:\projects\project-library-global` have been hurriedly and ha
 
 `C:\dev\project-template\` is currently under development. It is intended to kick-start a new project — the developer copies the project-template into the new project and that folder becomes the project library for the new project.
 
-When the dev-project-template project is complete, it will move into `C:\projects\project-library-global`.
+When the dev-project-template project is complete, it will move into `C:\dev\project-library-global`.
 
 ---
 
@@ -81,7 +81,7 @@ These are predetermined Modus Operandi (M.O.'s). Each file constitutes the stand
 
 ## Project lifecycle
 
-When a dev project has been completed and deployed, the project is live and the dev project gets archived. It will no longer be directly in the `C:\projects` folder but will move to `C:\projects\deployed-projects`.
+When a dev project has been completed and deployed, the project is live and the dev project gets archived. It will no longer be directly in the `C:\projects-reference` folder but will move to `C:\projects-reference\deployed-projects`.
 
 ---
 
