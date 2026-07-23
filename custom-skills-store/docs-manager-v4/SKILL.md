@@ -46,11 +46,17 @@ Learnings entry, not a scope parameter. They are the floor the entire system sta
 1. **Nothing is written, modified, or deleted anywhere, at any phase, except in Phase 4 — and
    Phase 4 only ever applies changes the developer explicitly approved in Phase 3.** Three
    phases are exempt from this because they only ever create brand-new files and never touch,
-   modify, or delete an original file: **Phase 0 (Backup)**, which creates copies;
-   **Phase 7 (Log)**, which writes a new timestamped log entry; and **Phase 8 (Learnings)**,
-   which writes new learning files. No other phase may write anything under any circumstance.
-2. **Phase 0 (Backup) must complete and verify successfully before Phase 1 (Scan) begins.** If
-   verification fails, the entire run aborts — no scan, no report, no changes.
+   modify, or delete an original file: **Phase 0 (Pre-flight Check & Backup)**, which checks git
+   status and creates copies; **Phase 7 (Log)**, which writes a new timestamped log entry; and
+   **Phase 8 (Learnings)**, which writes new learning files. No other phase may write anything
+   under any circumstance.
+2. **Phase 0 must run in full, in order, before Phase 1 (Scan) begins — every single
+   invocation, no exceptions.** Phase 0 has two mandatory steps, both blocking: (a) `git status`
+   on every in-scope Active Repository — if any is dirty, abort the entire run immediately with
+   the `REPOS_DIRTY` list, before backup or scan; (b) backup the in-scope file set and verify
+   the copy — if verification fails, abort with `BACKUP_FAILED`. Neither step may be skipped,
+   reordered, or asked about — invocation of `/docs-manager` is what triggers both, immediately
+   (Section 5).
 3. **Docs Manager never runs `gbrain sync` or any GBrain command that changes state.** Only
    read-only GBrain inspection (e.g. `gbrain sources list`) is permitted, and only where Section
    3 explicitly calls for it.
@@ -113,8 +119,15 @@ C:\python
 C:\SSH
 C:\temp
 C:\Users
+C:\mybizz\skills
 C:\backup-docs-manager
 ```
+
+`C:\mybizz\skills\` was added here after the `project-inventory.md`/`git-repo-inventory.md`
+merge surfaced that it had no exclusion anywhere, unlike `gbrain`/`gstack` which happen to match
+the name-pattern rule below. It's a third-party, not-user-managed tool repo (Section 3.1,
+Installed Tools) — same category as `gbrain`/`gstack`, just with a name that doesn't match the
+pattern, so it needed an explicit absolute-path entry instead.
 
 #### 1.2.2 Config Directory Exclusions (recursive, by name, anywhere in scope)
 
@@ -186,8 +199,14 @@ silently treated as "moved" or "doesn't exist yet."
 | Document | Type | What it tracks |
 |---|---|---|
 | `C:\dev\dev-root\docmap.md` | Markdown tree | Full division folder hierarchy, file placement rules — the **root** docmap |
-| `C:\dev\dev-root\project-inventory.md` | Markdown registry | Project paths, repos, GBrain sources, GStack artifacts |
-| `C:\mybizz\Desktop\pc-mapping\scaffold-system.html` | HTML tree | Visual hierarchy diagram, badges, move cards |
+| `C:\dev\dev-root\project-inventory.md` | Markdown registry | Project paths, GitHub repos and remotes, GBrain sources, GStack artifacts |
+
+**Retired:** `scaffold-system.html` was a one-time HTML visual companion to `docmap.md`, used
+during an early reorganization. It is no longer a managed document — once its badges settle to
+"existing," it becomes a lower-density restatement of what `docmap.md` already states directly,
+and maintaining two parallel representations of the same territory is unnecessary duplication.
+The last version has been archived to `C:\mybizz\archive\` as a historical record of that
+reorganization; Docs Manager no longer expects it to exist, verifies it, or reports it missing.
 
 ### 1.4 Discovered Documents (filename-based, anywhere in scope)
 
@@ -214,7 +233,7 @@ This is the exact answer to "how deep does Docs Manager go, and does it read eve
 | Layer | Depth | What happens |
 |---|---|---|
 | **Folders** (all of them, in scope) | Unlimited | Existence/structure check only — "does this directory exist, is it represented in the relevant map." Contents are never read just because a folder exists. |
-| **The six managed document types** (Section 1.3 + 1.4) | Unlimited | Full read, every instance, wherever it appears in scope. Nothing is summarized or skipped for being numerous — see Section 6, no vague quantifiers. |
+| **The five managed document types** (Section 1.3 + 1.4) | Unlimited | Full read, every instance, wherever it appears in scope. Nothing is summarized or skipped for being numerous — see Section 6, no vague quantifiers. |
 | **Every other file** (code, config, data, anything not named above) | N/A | Never opened, never read, at any depth. |
 | **References found inside a managed document** | One level | The target's existence is checked. Docs Manager does not chase further into an unrelated target's own content — unless that target is itself one of the six managed types, in which case it's already being scanned as part of the same run anyway. |
 
@@ -300,18 +319,23 @@ approval like any other proposed change (Hard Constraint 1) — it is never writ
 - Propose updating `verified:` to today's date
 
 **`C:\dev\dev-root\project-inventory.md`:**
+
+This is the single source of truth for repo/remote tracking — it absorbs what would otherwise
+be a separate, drift-prone repo inventory. It tracks every git repository in scope in three
+categories:
+
+| Category | Definition | What's verified |
+|---|---|---|
+| **Active Repositories** | Has a `.git` root and a configured remote | Local path exists; remote URL matches (`git remote get-url origin`); branch name matches |
+| **Inactive / No Remote** | Has a `.git` root but no remote, or is a known-obsolete repo | Local path exists; status note (e.g. "template, not version-controlled" or "obsolete") is accurate |
+| **Installed Tools (read-only)** | Third-party tool repos (GBrain, GStack, Skills) with an upstream remote Docs Manager doesn't own | Local path exists; upstream remote noted for reference only — **never verified against `git status`, never staged, never committed** |
+
 - Verify every project's local path exists
-- Check GitHub remote URLs match (via `git remote get-url origin`)
+- Check GitHub remote URLs and branch names match (via `git remote get-url origin` /
+  `git branch --show-current`)
 - Verify GBrain source names match reality (via `gbrain sources list` — read-only, Hard
   Constraint 3)
 - Update `updated:` date field if changed
-
-**`C:\mybizz\Desktop\pc-mapping\scaffold-system.html`:**
-- Walk the filesystem and compare against the HTML tree structure
-- Verify badges (NEW, EXISTING, TOOL, DELETE, ACTION) reflect current reality
-- Check move cards — have the moves been completed?
-- Check del cards — have the deletes been executed?
-- If the title or subtitle is outdated, flag for developer review
 
 ### 3.3 INDEX Files (any `INDEX.md` discovered in scope)
 
@@ -392,15 +416,45 @@ C:\mybizz\logs\docs-manager\Learnings\<timestamp>-<short-topic>.md
 
 ## 5. Execution Workflow
 
+**Invocation is the trigger, not a request to begin one.** When the developer runs
+`/docs-manager` (or `/docs-manager <scope>`), Phase −1 and Phase 0 start immediately — no
+"would you like me to begin?", no "should I proceed?", no confirmation step of any kind. The
+orchestrator does not address the developer again until one of exactly two things happens: (a)
+Phase 0 aborts (`REPOS_DIRTY` or `BACKUP_FAILED`) and reports why, or (b) Phase 2 presents the
+change report for approval. Asking permission to start, or asking which scope was meant when a
+valid scope keyword (or no keyword, meaning full run — Section 7) was already given, is treated
+as a failure to follow this section, not a helpful clarification. If `/docs-manager` is invoked
+with no scope keyword, that means full run (Section 7) — this is not ambiguous and must not be
+asked about.
+
 ### Phase −1: Load Learnings — Orchestrator (read-only)
 
 See Section 4.3. Not a sub-agent — OpenCode reads the Learnings folder directly and passes it
-forward.
+forward. Begins immediately on invocation, per the rule above.
 
-### Phase 0: Backup — Sub-agent (write, copy only)
+### Phase 0: Pre-flight Check & Backup — Sub-agent (write, copy only)
 
 Runs automatically — no per-run approval needed, per developer agreement (it only ever creates
 new copies, never touches an original).
+
+#### Step 0: Pre-flight git status check
+
+Before anything else, check `git status` on every **Active Repository** listed in
+`project-inventory.md` (Section 3.1) — this deliberately excludes code repos (Section 1.2.3,
+content-excluded and never committed to by Docs Manager anyway) and Installed Tools (never
+touched, Section 3.1).
+
+If any in-scope repository has uncommitted changes, **abort the entire run before backup or
+scan begins**. Report: *"The following repositories have uncommitted changes: [list]. Docs
+Manager cannot run while repos are out of sync — please commit or clean git status first."*
+This is the `REPOS_DIRTY` anomaly (Section 9) and is not recoverable automatically — the
+developer must resolve it outside Docs Manager and re-invoke the run.
+
+This precondition exists so Phase 6 never has to decide what to do with unrelated pending
+changes sitting in a repo — if the run starts, every in-scope repo is already known to be
+clean, and only Docs Manager's own changes will ever appear in a commit.
+
+#### Step 1: Backup
 
 1. Compute the full in-scope file set (Section 1.1 minus Section 1.2) — the same set Phase 1
    will walk.
@@ -495,26 +549,84 @@ If changes were applied, the sub-agent:
 
 ### Phase 6: Commit & Push — Sub-agent (write, git)
 
-Runs only if Phase 4 applied changes and Phase 5 verified cleanly.
+Runs only if Phase 4 applied changes and Phase 5 verified cleanly. If no changes were applied
+in Phase 4, skip this phase entirely.
 
-1. Group changed files by the git repository they belong to (walk upward from each changed
-   file to the nearest `.git` root).
-2. For each repository with changes: `git add` the changed files, `git commit -m "docs-manager:
-   <run-timestamp> — N changes applied"`, then `git push`.
-3. If a push fails (no remote, auth failure, conflict, etc.), do **not** retry silently — flag
-   `PUSH_FAILED` for that repository with the git error, but leave the local commit in place.
-   This does not roll back Phase 4's changes; it is reported in the log as an incomplete run.
-4. If no changes were applied in Phase 4, skip this phase entirely.
+Because Phase 0's pre-flight check (Step 0) already guaranteed every in-scope repo was clean
+before the run started, the only changes present in any repo at this point are Docs Manager's
+own — there is no unrelated pending content to reason about.
+
+#### Step 1: Discover and resolve
+
+Group changed files by the git repository they belong to (walk upward from each changed file
+to the nearest `.git` root).
+
+- If no `.git` directory is found upward from a changed file: classify as `NO_REPO`, skip git
+  operations for it, and report it under "Skipped — Not a Git Repository." This is expected
+  and correct for locations like `project-template/` (template, not version-controlled) — it
+  is reported for visibility, not treated as an error.
+- If a `.git` directory is found: resolve the exact git-tracked filename for each changed file
+  using `git ls-files --full-name <filename>` inside that repository, rather than the on-disk
+  filename. This handles NTFS case-insensitivity, where the on-disk filename can differ in
+  casing from the git-indexed filename (e.g., `agents.md` on disk vs `AGENTS.md` in git) —
+  using the on-disk name with `git add` can silently miss the file.
+
+#### Step 2: Stage and commit (scoped — Docs Manager changes only)
+
+`git add` only the resolved, Docs-Manager-changed files in each repository — never `git add -A`
+or any broad stage. Docs Manager's commits contain exactly what it changed, nothing else, per
+Hard Constraint 1. (The Phase 0 pre-flight check is what makes this safe to do narrowly — there
+should be nothing else pending in the repo to leave behind.)
+
+Commit with message: `"docs-manager: <run-timestamp> — N changes applied"`.
+
+This commit happens regardless of remote status (see Step 3) — a local commit is real,
+recoverable history even if the remote is unreachable, and should not be skipped just because
+the push might fail.
+
+#### Step 3: Validate remote and push
+
+For each repository committed in Step 2: run `git ls-remote --heads origin` to confirm the
+remote is reachable before pushing.
+
+- If this fails (no remote configured, repository not found, authentication failure): do not
+  retry silently. Report `PUSH_FAILED` for that repository with the exact error. The local
+  commit from Step 2 remains in place regardless — it is not discarded.
+- If it succeeds: run `git push`. If the push itself then fails (conflict, network error,
+  etc.), same handling — report `PUSH_FAILED`, keep the local commit.
+- The orchestrator surfaces any `PUSH_FAILED` result to the developer immediately, not just in
+  the eventual log — remote issues (missing GitHub repo, wrong remote URL) often need the
+  developer's attention before the run can be considered closed.
+
+#### Step 4: Write the commit/push report
+
+Return a per-repository result table to the orchestrator:
+
+| Repository | Commit | Files Changed | Push Result |
+|---|---|---|---|
+| ... | ... | ... | PUSHED / PUSH_FAILED / NO_REPO |
+
+The orchestrator writes this to `C:\mybizz\logs\github-logs\commit-push-<date>.md` — a separate
+directory from `C:\mybizz\logs\docs-manager\`, so git-focused logs never get mixed into
+docs-manager run logs. The Phase 7 log's own "Commit/Push Detail" table should reference this
+file rather than duplicating it in full, so there's one source of truth for the detail.
 
 ### Phase 7: Log — Orchestrator
 
-OpenCode writes the log entry to `C:\mybizz\logs\docs-manager\<timestamp>.md`:
+OpenCode writes the log entry to `C:\mybizz\logs\docs-manager\<timestamp>.md`.
+
+**The `<timestamp>` is when the log is written — run completion time — not when Phase 1
+started.** Generate it fresh at write time from the current system clock. A run spanning two
+calendar days (scan on day 1, approval and apply on day 2) is named for the day it concluded,
+not the day it began. The log body records both times as internal fields:
 
 ```markdown
-# docs-manager run — 2026-07-21T14:30:00
+# docs-manager run — 2026-07-23T10-47-00
 
 **Scope:** full
-**Backup:** verified — C:\backup-docs-manager\2026-07-21T14-30-00\
+**Scan started:** 2026-07-22T17-27-00
+**Completed:** 2026-07-23T10-47-00
+**Backup:** verified — C:\backup-docs-manager\2026-07-23T10-47-00\
 **Folders walked:** 340
 **Files inspected (managed types):** 27
 **Documents checked:** 27
@@ -524,7 +636,7 @@ OpenCode writes the log entry to `C:\mybizz\logs\docs-manager\<timestamp>.md`:
 **Changes applied:** 5
 **Anomalies flagged:** 2
 **Verification:** all references resolve
-**Commit/Push:** 2 repos committed and pushed successfully
+**Commit/Push:** see C:\mybizz\logs\github-logs\commit-push-2026-07-23.md
 
 ## Applied
 
@@ -537,20 +649,90 @@ OpenCode writes the log entry to `C:\mybizz\logs\docs-manager\<timestamp>.md`:
 | Document | Issue | Recommendation |
 |---|---|---|
 | ... | ... | ... |
-
-## Commit/Push Detail
-
-| Repository | Commit | Push Result |
-|---|---|---|
-| ... | ... | ... |
 ```
 
 No narrative, no planning — structured event record only. No vague quantifiers (Section 6) —
 folder and file counts are exact, every time.
 
-### Phase 8: Update Learnings — Orchestrator
+### Phase 8: Update Learnings — Orchestrator (mandatory)
 
-See Section 4.4. Written after the log, from the same run's Phase 3 decisions.
+**Phase 8 is mandatory whenever Phase 4 applied changes. The orchestrator must not skip it.**
+
+After the log is written (Phase 7), the orchestrator reviews the run for judgment calls the
+developer made in Phase 3 that are likely to recur — anomaly resolutions, new conventions
+established, edge cases the skill text doesn't yet address — and writes one file per learning
+to `C:\mybizz\logs\docs-manager\Learnings\<timestamp>-<short-topic>.md` (Section 4.5 format),
+using the same `<timestamp>` as the Phase 7 log.
+
+**Mandatory verification:** after writing learnings, the orchestrator must confirm at least one
+new file exists in the Learnings folder matching the current run's timestamp
+(`ls C:\mybizz\logs\docs-manager\Learnings\<timestamp>-*.md`). If none is found, Phase 8 was
+skipped — this is a process failure, not a silent no-op. Report the omission to the developer
+and offer to create learnings now before considering the run closed.
+
+If the run applied changes but genuinely produced no novel judgment calls (everything followed
+existing SKILL.md rules and prior Learnings entries), write a single minimal learning stating
+exactly that, so the verification step above still finds a file and the record shows Phase 8
+executed:
+
+```markdown
+# Learning — <timestamp>
+
+**Context:** All decisions in this run were standard per existing SKILL.md rules and
+prior Learnings entries. No new judgment calls occurred.
+
+**Decision:** No new learnings to record.
+
+**Applies to:** Future runs — demonstrates that Phase 8 executed.
+```
+
+### Phase 9: Completion Gate — Orchestrator
+
+After Phase 8 completes and is verified, before the run is considered closed:
+
+#### Step 1: Re-verify the division map
+
+Run a small, `division-maps`-scoped re-scan of `docmap.md` and `project-inventory.md` only
+(Section 7). This exists because the run's own actions (Phase 4 edits, Phase 6 commits) can
+themselves cause these two documents to drift by the time the run finishes — e.g. a new
+directory or repo appearing as a side effect of what was just applied. If this re-scan finds
+anything, it goes through its own small Phase 2/3/4 report-approve-apply cycle before
+continuing — it does **not** write silently, same as every other change in this system.
+
+#### Step 2: GitHub confirmation prompt
+
+Ask the developer, as its own separate question (never combined with Step 3):
+
+- If Phase 6 already ran this session: *"Commit and push to GitHub completed. All repositories
+  showing clean. Confirm?"*
+- If Phase 6 was skipped (e.g. `/docs-manager no-push` scope was used): *"Phase 6 was skipped.
+  Would you like to commit and push to GitHub now?"*
+
+#### Step 3: GBrain sync prompt
+
+Ask, as its own separate question: *"Would you like to run the GBrain sync script?"*
+
+This is an optional, explicitly opt-in courtesy offered by the orchestrator after Docs Manager
+has finished — it is not something Docs Manager does as part of its own workflow, and it must
+never be assumed or run automatically (Hard Constraint 3). If the developer says yes, the
+orchestrator — not any Docs Manager sub-agent — launches the external sync script:
+
+```
+setsid bash /mnt/c/mybizz/scripts/sync-gbrain.sh > /tmp/sync-output.txt 2>&1 &
+```
+
+The script handles the stop/sync/embed/restart cycle externally and writes its own log to
+`C:\mybizz\logs\gbrain-logs\sync-<timestamp>.log`. Docs Manager itself never executes `gbrain
+sync` or touches GBrain state directly.
+
+#### Step 4: Closing git-status snapshot
+
+After both prompts are answered, run a `git status` sweep across all Active Repositories
+(Section 3.1) and save the result to `C:\mybizz\logs\github-logs\git-status-<date>.md` (date
+only, not a timestamp — distinguishes it from the commit-push report). The file contains a
+table: repository, remote URL, branch, ahead/behind counts, and status (clean or dirty). This
+is the definitive closing record that every repo is confirmed synced — a fixed point of
+reference if a discrepancy is ever suspected later.
 
 ---
 
@@ -568,6 +750,9 @@ See Section 4.4. Written after the log, from the same run's Phase 3 decisions.
 
 ## 7. Scope Parameter
 
+`/docs-manager` alone — no keyword after it — **means full run, unconditionally.** This is a
+default, not a gap to ask about (Section 5).
+
 - `/docs-manager` — full run (backup → scan all pinned + discovered documents → ... → commit/push → log → learnings)
 - `/docs-manager <document-path>` — scan only that one document (backup still runs for the full
   in-scope set, since drift elsewhere may still affect that document's references)
@@ -578,6 +763,9 @@ See Section 4.4. Written after the log, from the same run's Phase 3 decisions.
   directory walk)
 - `/docs-manager no-push` — run through Phase 5 (Verify) and Phase 7 (Log), skipping Phase 6
   (Commit & Push) — useful for local-only review runs
+
+Whichever of these was invoked, execution begins immediately per Section 5 — no confirmation,
+no "which of these did you mean."
 
 ---
 
@@ -592,8 +780,10 @@ Four single-purpose agent files, each with only the permissions its phase needs:
 | `docs-manager-apply.md` | 4 — Apply approved changes | edit |
 | `docs-manager-commit.md` | 6 — Commit & Push | git/bash |
 
-Phases −1, 2, 3, 7, and 8 are orchestrator-level (OpenCode itself), not sub-agents — they're
-simple reads/writes or developer interaction, not scanning work.
+Phases −1, 2, 3, 7, 8, and 9 are orchestrator-level (OpenCode itself), not sub-agents — they're
+simple reads/writes or developer interaction, not scanning work. (Phase 9's Step 1 re-verify
+does launch the Phase 1 scan sub-agent again, scoped to `division-maps` — it isn't a new
+sub-agent, just a repeat, narrower invocation of the existing one.)
 
 **None of these files pin a specific model.** The frontmatter intentionally omits a `model:`
 field so each run uses whichever model is currently active/selected — a model named explicitly
@@ -610,6 +800,7 @@ full instructions each sub-agent runs under. They implement Sections 1–6 of th
 
 | Class | Definition | Action |
 |---|---|---|
+| **REPOS_DIRTY** | Phase 0 pre-flight found uncommitted changes in an in-scope Active Repository | Abort entire run before backup or scan — developer must clean git status and re-invoke |
 | **BACKUP_FAILED** | Phase 0 backup could not be verified against source scope | Abort entire run — no scan performed |
 | **BROKEN** | Reference points to a path that doesn't exist and no similar path exists | Propose fix if target is known, else flag with recommendation |
 | **MISMATCHED** | Reference points to a path, but the known correct path for that document is different | Propose correct path |
@@ -618,13 +809,36 @@ full instructions each sub-agent runs under. They implement Sections 1–6 of th
 | **STALE DATE** | Document has a date field older than 7 days since last run | Flag — not actionable automatically |
 | **MISSING** | Directory or file expected by the document doesn't exist on disk | Propose removal or flag with recommendation if uncertain |
 | **UNDOCUMENTED** | Directory or file (including a code repo — Section 2.5) exists on disk but not in the document | Propose addition |
-| **BADGE DRIFT** | HTML badge (NEW, DELETE, etc.) doesn't match current reality | Propose badge update |
 | **COUNT MISMATCH** | INDEX or doc states a count (e.g., "16 docs") that doesn't match reality | Propose updated count |
-| **PUSH_FAILED** | Phase 6 commit succeeded locally but `git push` failed | Flag in log — commit stands, push must be retried manually |
+| **NO_REPO** | A changed file has no `.git` root found upward from it | Report under "Skipped — Not a Git Repository" — expected for templates, not an error |
+| **PUSH_FAILED** | Phase 6 commit succeeded locally but `git push` failed (or remote validation failed before push) | Flag immediately to developer — commit stands, push must be retried manually |
 
 ---
 
-## 10. Edge Cases
+## 10. Log Directory Structure
+
+Three directories under `C:\mybizz\logs\`, three naming conventions, no cross-contamination:
+
+```
+C:\mybizz\logs\
+├── docs-manager\
+│   ├── <timestamp>.md                    ← Phase 7 run log (bare timestamp, completion time)
+│   └── Learnings\
+│       └── <timestamp>-<short-topic>.md  ← Phase 8 learnings
+├── github-logs\
+│   ├── commit-push-<date>.md             ← Phase 6 commit/push report
+│   └── git-status-<date>.md              ← Phase 9 closing snapshot
+└── gbrain-logs\
+    └── sync-<timestamp>.log              ← Written by the sync script itself, not Docs Manager
+```
+
+`github-logs/` is a new directory not yet reflected in `docmap.md` at the time of this
+revision — the first run after this change will find it `UNDOCUMENTED` under the normal
+Section 3.1 rules and propose adding it, same as any other new folder.
+
+---
+
+## 11. Edge Cases
 
 1. **Circular references**: If doc A references doc B and doc B references doc A, both are
    valid if both resolve. No special handling.
@@ -672,3 +886,20 @@ full instructions each sub-agent runs under. They implement Sections 1–6 of th
 
 12. **Learnings vs. SKILL.md conflicts**: Handled per Section 4.2 — Learnings win on
     substantive/judgment matters, Hard Constraints always win regardless of source.
+
+13. **`scaffold-system.html` retirement**: No longer a pinned document (Section 1.3). If a file
+    still exists at its old path, Docs Manager does not read, verify, or report on it — it is
+    simply out of scope going forward, same as anything else not named in Section 1.3/1.4. Its
+    last version lives in `C:\mybizz\archive\` as a historical record only.
+
+14. **Repo inventory is not a separate document**: `project-inventory.md` is the single source
+    of truth for git repos, remotes, and branches (Section 3.1). If a separate repo-inventory
+    file is ever found elsewhere in scope, it is flagged as `UNDOCUMENTED`/redundant rather than
+    read as an independent source — two documents tracking the same repo list is exactly the
+    kind of duplication this system exists to eliminate.
+
+15. **A dirty repo blocks the entire run, not just its own commit**: Unlike a single anomaly,
+    `REPOS_DIRTY` (Section 9) is a precondition failure, not a scan finding — it stops the run
+    before Phase 0's backup even begins. This is deliberate: it's simpler and safer to guarantee
+    every in-scope repo starts clean than to have Phase 6 reason about what to do with unrelated
+    pending changes mid-run.

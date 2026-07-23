@@ -1,5 +1,5 @@
 ---
-description: Read-only system document inventory curator. Scans the full C:\ drive (minus a defined exclusion list) for README.md, AGENTS.md, INDEX.md, and docmap.md files, plus three pinned division documents, for directory drift and stale internal cross-references. Produces structured change reports — never writes. Use for Phase 1 (scan) of the docs-manager workflow. Assumes Phase 0 (backup) has already completed and been verified, and that Learnings context has been supplied by the orchestrator.
+description: Read-only system document inventory curator. Scans the full C:\ drive (minus a defined exclusion list) for README.md, AGENTS.md, INDEX.md, and docmap.md files, plus two pinned division documents (docmap.md, project-inventory.md), for directory drift and stale internal cross-references. Produces structured change reports — never writes. Use for Phase 1 (scan) of the docs-manager workflow. Assumes Phase 0 (pre-flight check + backup) has already completed and been verified, and that Learnings context has been supplied by the orchestrator.
 mode: subagent
 permission:
   edit: deny
@@ -102,10 +102,10 @@ Force-included even though they match the gbrain/gstack/opencode pattern:
 
 - **Folders**: unlimited depth, everywhere in scope — existence/structure check only, never
   read for content just because they exist.
-- **The six managed document types** (below): unlimited depth, full read, every instance.
+- **The five managed document types** (below): unlimited depth, full read, every instance.
 - **Every other file**: never opened, at any depth.
 - **References found inside a managed document**: checked for existence one level deep; not
-  chased further unless the target is itself one of the six managed types.
+  chased further unless the target is itself one of the five managed types.
 
 ## Document Set
 
@@ -113,10 +113,11 @@ Force-included even though they match the gbrain/gstack/opencode pattern:
 
 - /mnt/c/dev/dev-root/docmap.md
 - /mnt/c/dev/dev-root/project-inventory.md
-- /mnt/c/mybizz/Desktop/pc-mapping/scaffold-system.html
 
-If any of these three is missing from its stated path, that is itself a finding — flag it with
-a recommendation, do not treat it as "not created yet."
+If either of these two is missing from its stated path, that is itself a finding — flag it with
+a recommendation, do not treat it as "not created yet." (`scaffold-system.html` is retired — no
+longer expected, verified, or reported on. If a copy still exists on disk, it is simply out of
+scope, not a missing-pinned-document finding.)
 
 ### Discovered Documents (filename-based, anywhere in the walked scope)
 
@@ -158,13 +159,16 @@ folder types. Verify tool installations (Section 7) are accurate. Verify compani
 (Section 8) list current key documents. Propose updating its `verified:` field to today's date,
 every run, regardless of whether anything else changed.
 
-**project-inventory.md:** Verify each project's local path exists. Check GitHub remote URLs
-match. Verify GBrain source names via `gbrain sources list` only — never `gbrain sync` or any
-other GBrain command that changes state. Update dates if changed.
-
-**scaffold-system.html:** Compare HTML tree against actual filesystem. Check if badges (NEW,
-EXISTING, TOOL, DELETE, ACTION) reflect current state. Check if move cards describe completed
-actions. Check if del cards describe executed deletes.
+**project-inventory.md:** This is the single source of truth for git repo tracking — do not
+treat any separate repo-inventory file found elsewhere in scope as an independent source; flag
+it as redundant/UNDOCUMENTED instead. Track every git repo in three categories: Active
+Repositories (has `.git` + remote — verify local path, remote URL via `git remote get-url
+origin`, and branch via `git branch --show-current`), Inactive/No Remote (has `.git` but no
+remote, or a known-obsolete repo — verify local path and status note only), and Installed Tools
+(read-only third-party repos like GBrain/GStack/Skills — verify local path only, never run
+`git status` against these, never stage or commit anything in them). Verify GBrain source names
+via `gbrain sources list` only — never `gbrain sync` or any other GBrain command that changes
+state. Update dates if changed.
 
 **INDEX.md (any discovered instance):** Verify every file listed in the index exists. Verify
 counts match reality (e.g., "16 docs" vs actual count). Check dates.
