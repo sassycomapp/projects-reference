@@ -25,7 +25,7 @@ Path register for all config, orchestration, and memory artifacts. Updated 2026-
 
 | Repo | Path | Default agent |
 |---|---|---|
-| project-library | `C:\dev\dev-mb-3-cs\project-library` | plan |
+| mb-3-cs-project-library | `C:\dev\dev-mb-3-cs\mb-3-cs-project-library` | plan |
 | code | `C:\dev\dev-mb-3-cs\mb-3-cs` | build |
 
 ### mb4ecom
@@ -123,7 +123,7 @@ Each project gets a GStack internal directory at `~/.gstack/projects/{SLUG}/` wi
 | SLUG | Project |
 |---|---|
 | `sassycomapp-projects-mgt` | C:\projects root |
-| `sassycomapp-project-library` | mb-3-cs project-library |
+| `sassycomapp-project-library` | mb-3-cs-project-library |
 | `sassycomapp-project-library-mb4ecom` | mb4ecom project-library |
 | `sassycomapp-project-library-mb5pdlf` | mb5pdlf project-library |
 | `sassycomapp-dev-pdlf` | dev-pdlf |

@@ -91,7 +91,7 @@ All AGENTS.md files are kept under 200 lines to maximize adherence. Longer files
 |---|---|
 | Global AGENTS.md | 132 |
 | projects/AGENTS.md | 116 |
-| mb-3-cs/project-library/AGENTS.md | 138 |
+| mb-3-cs/mb-3-cs-project-library/AGENTS.md | 138 |
 | mb4ecom-project-library/AGENTS.md | 119 |
 | mb5pdlf-project-library/AGENTS.md | 122 |
 | dev-pdlf/AGENTS.md | 133 |
@@ -129,9 +129,9 @@ Loading all 77+ global documents into every conversation would consume the entir
 ### Example: Agent starts a task in mb-3-cs
 
 1. OpenCode loads `~/.config/opencode/AGENTS.md` (global) into context
-2. OpenCode loads `mb-3-cs/project-library/AGENTS.md` (project) into context
+2. OpenCode loads `mb-3-cs/mb-3-cs-project-library/AGENTS.md` (project) into context
 3. OpenCode loads the four global INDEX.md files into context (via `instructions`)
-4. OpenCode loads `mb-3-cs/project-library/README.md` into context (via `instructions`)
+4. OpenCode loads `mb-3-cs/mb-3-cs-project-library/README.md` into context (via `instructions`)
 5. The agent reads the rules and indexes
 6. If the task involves architecture, the agent reads the relevant ADR from `adr-global/`
 7. If the task involves implementation, the agent reads the relevant spec from `specifications-global/`

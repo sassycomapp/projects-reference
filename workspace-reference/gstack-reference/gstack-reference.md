@@ -24,7 +24,7 @@ When GStack workflow expectations conflict with OpenCode config, project rules, 
 
 Three core workflow families:
 
-### docs-plan (project-library)
+### docs-plan (mb-3-cs-project-library)
 
 **Use when:** analysis, validation, architecture, planning, ADR work, prompt authoring.
 **Agent:** plan (primary)
@@ -159,7 +159,7 @@ GStack skills save to `~/.gstack/projects/$SLUG/` internally. Per AGENTS.md, cop
 
 | Workspace | Default agent | Workflow family | Primary responsibility |
 |---|---|---|---|
-| project-library | plan | docs-plan | ADRs, specs, planning, devlog/todo |
+| mb-3-cs-project-library | plan | docs-plan | ADRs, specs, planning, devlog/todo |
 | code repos | build | code-plan-build | Implementation, refactors, validation |
 | cross-workspace | plan | status-handover | Session close, checkpoints, handoffs |
 

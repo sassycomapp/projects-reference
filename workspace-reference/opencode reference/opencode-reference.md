@@ -25,7 +25,7 @@ Switch with **Tab** key. Current mode shown in bottom-right corner.
 
 ```bash
 # From WSL, in the project directory you want to work in
-cd /mnt/c/dev/dev-mb-3-cs/project-library
+cd /mnt/c/dev/dev-mb-3-cs/mb-3-cs-project-library
 opencode web --hostname 0.0.0.0
 ```
 
@@ -147,7 +147,7 @@ All project configs share a common pattern:
 
 | Project | Project-library config | Code repo config |
 |---|---|---|
-| mb-3-cs | `C:\dev\dev-mb-3-cs\project-library\opencode.json` | `C:\dev\dev-mb-3-cs\mb-3-cs\opencode.json` |
+| mb-3-cs | `C:\dev\dev-mb-3-cs\mb-3-cs-project-library\opencode.json` | `C:\dev\dev-mb-3-cs\mb-3-cs\opencode.json` |
 | mb4ecom | `C:\dev\dev-mb4ecom\mb4ecom-project-library\opencode.json` | `C:\dev\dev-mb4ecom\mb4ecom\opencode.json` |
 | mb5pdlf | `C:\dev\dev-mb5pdlf\mb5pdlf-project-library\opencode.json` | `C:\dev\dev-mb5pdlf\mb5pdlf\opencode.json` |
 | dev-pdlf | `C:\dev\dev-pdlf\opencode.json` | — |
