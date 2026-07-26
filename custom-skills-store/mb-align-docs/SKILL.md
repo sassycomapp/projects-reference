@@ -71,8 +71,10 @@ permissions, never a single subagent authorized for both.
 0. **Precondition + Backup** — git working tree must be clean for the
    target project and for `project-library-global`; stop immediately and
    report if either is dirty. Then take a verified backup to
-   `C:\backup-mb-align-docs\<timestamp>\`. Run stops cold if the backup
-   cannot be verified — no exceptions, mirrors Docs Manager.
+   `C:\backups-general\backup-mb-align-docs_<timestamp>\`, where
+   `<timestamp>` is `YYYY-MM-DDTHHMMSS+0200` (Filename-Safe ISO 8601,
+   UTC+2, per `global-0037`, C:\dev\project-library-global\adr-global\timezone-utc-storage-display-conversion.md). Run stops cold if the backup cannot be
+   verified — no exceptions, mirrors Docs Manager.
 1. **Detect** (`detector`) — scan the declared target folder within the
    named project, or, for an identifier-change sweep, the full corpus
    (project + global together). Read-only. Also runs the register
@@ -166,7 +168,7 @@ a drift item — heal to the current live version, or remove.
 | `...\in-progress\` | Current run only — resume source if interrupted |
 | `...\last-completed-run\` | Full detail of most recent finished run |
 | `...\abandoned-runs\` | Declined-resume runs, kept, never deleted |
-| `C:\backup-mb-align-docs\` | Verified backups, one snapshot per run |
+| `C:\backups-general\backup-mb-align-docs_<timestamp>\` | Verified backups, one snapshot per run |
 | `{slug}-project-library\register-local\` | Project's populated register |
 | `project-library-global\register-global\` | Global populated register |
 | `{project}\Quarantine\`, global `Quarantine\` | Quarantined copies |

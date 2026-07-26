@@ -21,7 +21,9 @@ All other fields are permanent from first registration.
 - **folder** — folder within the corpus this document lives in.
 - **type** — document type (adr / spec / policy / guide / checklist / sop / template / other).
 - **state** — one of: `Live`, `Retired`, `Quarantine`. Mirrors the document's own front-matter `state` field.
-- **date-registered** — date this row was first appended. Never changes.
+- **date-registered** — date this row was first appended. Never changes. Format:
+  `YYYY-MM-DDTHHMMSS+0200` (Filename-Safe ISO 8601, UTC+2), per `global-0037` (C:\dev\project-library-global\adr-global\timezone-utc-storage-display-conversion.md).
 - **date-state-changed** — date `state` last changed. Updated whenever state flips.
+  Same format as date-registered.
 - **superseded-by** — doc-id of the version that replaced this one, if state is Retired due to versioning. Blank otherwise.
 - **notes** — free text, optional.

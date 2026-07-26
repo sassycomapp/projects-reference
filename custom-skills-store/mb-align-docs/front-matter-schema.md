@@ -22,7 +22,11 @@ front matter). See mb-align-docs Function Scope, Section 5.
 - **state** — one of: `Live`, `Retired`, `Quarantine`. Authoritative for
   whether references to this document are valid. Any reference to a
   non-Live target is a drift item.
-- **date-created** — date this document (this specific version) was created.
+- **date-created** — date this document (this specific version) was created. Format:
+  `YYYY-MM-DDTHHMMSS+0200` (Filename-Safe ISO 8601, UTC+2), per the timestamp standard
+  in `global-0037` (C:\dev\project-library-global\adr-global\timezone-utc-storage-display-conversion.md; Client Timezone / Build Artefact Timestamp Format Standard). A
+  date-only value (`YYYY-MM-DD`) is acceptable where an internal document date is being
+  carried over and only a date, not a time, was originally stated.
 
 ## Conditional fields
 

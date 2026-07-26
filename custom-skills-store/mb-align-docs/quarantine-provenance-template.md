@@ -17,7 +17,8 @@ Section 3.
 - **source** — where the copy came from. Format: `{project-slug}/{folder}/{filename}`
   for cross-project copies, or `{doc-id of the retired original}` for
   same-project retired versions moved to Quarantine.
-- **date-quarantined** — date the copy was made / the move occurred.
+- **date-quarantined** — date the copy was made / the move occurred. Format:
+  `YYYY-MM-DDTHHMMSS+0200` (Filename-Safe ISO 8601, UTC+2), per `global-0037` (C:\dev\project-library-global\adr-global\timezone-utc-storage-display-conversion.md).
 - **quarantine-reason** — one of: `cross-project-reference` | `retired-version-preserved`
 
 ## Reminder
