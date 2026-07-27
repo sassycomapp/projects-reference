@@ -176,6 +176,30 @@ interrelate or depend on one another:
 
 Neither leans on the other's outputs as an input. Each stands alone.
 
+## 8. UI documentation model: wireframe-definition / ui-scaffold
+
+Per form-folder under a project's `ui\` folder
+(`ui\{package-name}\{form-name}\`), exactly six files exist, with a
+three-file/three-file front-matter split:
+
+**Documents with front matter (authored, in scope):**
+- `{form-name}-wireframe-definition.md` — derives meaningfully from
+  architecture; has its own identity and lifecycle.
+- `{form-name}-wireframe-chklist.md` — filled in/marked per form during
+  build, making it an applied record, not a static template.
+- `{form-name}-screen-chklist.md` — same reasoning as
+  wireframe-chklist above.
+
+**Build artefacts without front matter (permanently out of scope):**
+- `{form-name}-wireframe.html` — HTML output, not an authored document.
+- `{form-name}-screen.html` — HTML output, not an authored document.
+- `{form-name}-screen.png` — image output, not a document at all.
+
+The three HTML/PNG files are permanently out of front-matter scope by
+nature — "no front matter" on these is correct and expected, never a gap
+to flag on future Detect passes. The three markdown files do get front
+matter and register entries like any other in-scope document.
+
 ---
 
 ## Status

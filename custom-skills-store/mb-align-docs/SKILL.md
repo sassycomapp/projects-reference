@@ -172,6 +172,29 @@ Runs as part of Detect, after Backup/precondition:
 - This check does not alter what counts as in-scope or out-of-scope;
   it only detects documents already in scope that lack front matter.
 
+- A document that has a front-matter block but is missing one or more of
+  the four required fields (document, doc-id, state, date-created, per
+  front-matter-schema.md) is a distinct finding type: "incomplete front
+  matter." This is separate from "missing front matter" (no block at all).
+
+- For each incomplete front-matter document, the detector proposes only
+  the missing field(s) — fields already present and correct are left
+  untouched.
+
+- Presented for developer approval during Phase 3 (Approve). Incomplete-
+  front-matter findings across the run may be batch-approved as a single
+  group — they share the same finding type and remediation path, so they
+  are not "unrelated findings" under the Phase 3 rule.
+
+- On approval, Apply writes only the missing field(s) into the existing
+  block, preserving all pre-existing fields as-is. Routes to writer-text
+  for the write action — this is a content addition to existing front
+  matter, not a structural rename, move, or retire.
+
+- After writing, Verify re-reads the document to confirm the block now
+  contains all four required fields, and that no pre-existing field was
+  altered.
+
 ## Directionality rules (enforced during Detect)
 
 - Global → Global: permitted.
@@ -200,3 +223,4 @@ a drift item — heal to the current live version, or remove.
 | `{slug}-project-library\register-local\` | Project's populated register |
 | `project-library-global\register-global\` | Global populated register |
 | `{project}\Quarantine\`, global `Quarantine\` | Quarantined copies |
+| `{slug}-project-library\ui\{package}\{form}\` | Per-form UI documentation: wireframe-definition, checklists (authored, with front matter), plus wireframe/screen HTML and PNG artefacts (build output, permanently out of front-matter scope) |
