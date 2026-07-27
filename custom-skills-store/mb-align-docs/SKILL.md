@@ -43,7 +43,8 @@ scope Section 2) require both sides present in the same run to validate.
 
 - **detector** — read-only. Performs Detect. Cannot write.
 - **writer-text** — write permission for text-level corrections only:
-  reference repoints (healing fixes). Cannot rename, move, or retire a
+  reference repoints (healing fixes) and front-matter insertion for
+  missing-front-matter findings. Cannot rename, move, or retire a
   file.
 - **writer-structural** — write permission for structural actions only:
   identifier-change renames plus their triggered sweep, register
@@ -143,6 +144,33 @@ Runs as part of Detect, after Backup/precondition:
   confirmation. No bypass except aborting the entire run.
 
 See `mb-align-docs-function-scope.md` Section 6.
+
+## Missing-front-matter check
+
+Runs as part of Detect, after Backup/precondition:
+
+- Re-read every in-scope document (per the skill's existing
+  scope/exclusion rules) to check for the presence of a YAML
+  front-matter block (--- delimited).
+- A document found without front matter is a distinct finding type:
+  "missing front matter."
+- For each bare document, the detector proposes an identity:
+  document (file path), doc-id (determined from path per
+  project-inventory), state (proposed as Live), date-created (file
+  creation date or first git commit for the file).
+- Presented for developer approval during Phase 3 (Approve), same as
+  a register-mismatch finding. Missing-front-matter findings across
+  the run may be batch-approved as a single group — they share the
+  same finding type and remediation path, so they are not "unrelated
+  findings" under the Phase 3 rule.
+- On approval, Apply writes the front-matter block using the approved
+  identity. Routes to writer-text for the write action — this is a
+  content addition, not a structural rename, move, or retire.
+- After writing, Verify re-reads the document to confirm the block
+  is present and matches the approved identity before moving to the
+  next.
+- This check does not alter what counts as in-scope or out-of-scope;
+  it only detects documents already in scope that lack front matter.
 
 ## Directionality rules (enforced during Detect)
 
