@@ -31,8 +31,9 @@ triggers:
 | **Trigger** | Manual only — developer invokes when structural changes have been made |
 | **Scope model** | Exclusion-based (blocklist), not a curated allowlist |
 | **Backup** | Mandatory, verified, automatic — precedes every scan, no approval needed |
+| **Run state** | Checkpointed continuously from invocation (`in-progress\`) — a lost session resumes exactly where it left off, always asked, never automatic |
 | **Learnings** | Loaded before every run, updated after every run — overrules SKILL.md except Hard Constraints |
-| **Approval** | Change report presented → developer approves → changes applied |
+| **Approval** | Change report presented → developer approves → text edits and file-system operations applied separately, the latter with a second confirmation |
 | **Commit** | Approved changes are committed and pushed to GitHub after verification |
 | **Log** | `C:\mybizz\logs\docs-manager\<timestamp>.md` |
 | **Orchestrator** | OpenCode, always |
@@ -44,13 +45,17 @@ triggers:
 These three rules cannot be overridden by anything — not a SKILL.md edit made casually, not a
 Learnings entry, not a scope parameter. They are the floor the entire system stands on.
 
-1. **Nothing is written, modified, or deleted anywhere, at any phase, except in Phase 4 — and
-   Phase 4 only ever applies changes the developer explicitly approved in Phase 3.** Three
-   phases are exempt from this because they only ever create brand-new files and never touch,
-   modify, or delete an original file: **Phase 0 (Pre-flight Check & Backup)**, which checks git
-   status and creates copies; **Phase 7 (Log)**, which writes a new timestamped log entry; and
-   **Phase 8 (Learnings)**, which writes new learning files. No other phase may write anything
-   under any circumstance.
+1. **Nothing is written, modified, moved, renamed, or deleted anywhere, at any phase, except in
+   Phase 4a (text edits) or Phase 4b (file-system operations) — and both only ever apply changes
+   the developer explicitly approved in Phase 3, with Phase 4b additionally requiring a second,
+   explicit confirmation immediately before it executes.** **Phase 4b never deletes anything —
+   any operation that would otherwise be a delete is rewritten as a move to the relevant
+   `obsolete\` folder instead.** Four things are exempt from this because they only ever create
+   brand-new files and never touch, modify, or delete an original file: **Phase 0 (Pre-flight
+   Check & Backup)**, which checks git status and creates copies; **Phase 7 (Log)**, which
+   writes a new timestamped log entry; **Phase 8 (Learnings)**, which writes new learning files;
+   and **continuous checkpointing** (Phase −2 onward), which appends to a single in-progress run
+   record. No other phase may write anything under any circumstance.
 2. **Phase 0 must run in full, in order, before Phase 1 (Scan) begins — every single
    invocation, no exceptions.** Phase 0 has two mandatory steps, both blocking: (a) `git status`
    on every in-scope Active Repository — if any is dirty, abort the entire run immediately with
@@ -125,8 +130,7 @@ Exact matches within the three walk roots — never entered, never walked. Most 
 that mattered under the old whole-drive design (`C:\Windows`, `C:\Program Files`, `C:\Users`,
 etc.) are no longer needed — they were never inside any of the three roots to begin with, so
 restricting the walk root already excludes them. Only exclusions that are actually nested
-*inside* one of the three roots
-three roots remain relevant:
+*inside* one of the three roots remain relevant:
 
 ```
 C:\mybizz\skills
@@ -136,7 +140,7 @@ C:\mybizz\skills
 merge surfaced that it had no exclusion anywhere, unlike `gbrain`/`gstack` which happen to match
 the name-pattern rule below. It's a third-party, not-user-managed tool repo (Section 3.1,
 Installed Tools) — same category as `gbrain`/`gstack`, just with a name that doesn't match the
-pattern, so it needed an explicit absolute-path entry instead. `C:\backup-docs-manager` needs no
+pattern, so it needed an explicit absolute-path entry instead. `C:\backups-general\` needs no
 exclusion here either now — it's a top-level `C:\` folder, not nested inside any of the three
 walk roots, so it's already outside scope by construction.
 
@@ -164,7 +168,7 @@ they're created, following the existing convention:
 
 ```
 C:\dev\dev-mb-3-cs\mb-3-cs\        ← code repo (matches slug, has anvil.yaml)
-C:\dev\dev-mb-3-cs\project-library\ ← NOT a code repo — stays in scope
+C:\dev\dev-mb-3-cs\mb-3-cs-project-library\ ← NOT a code repo — stays in scope
 ```
 
 **"Excluded" means content-excluded, not reference-invisible** (see Section 2.5) — a docmap
@@ -297,7 +301,7 @@ For each extracted reference:
 
 ### 2.4 Circular Reference Exclusion
 
-The sub-agent never scans `C:\mybizz\logs\` or `C:\backup-docs-manager\` (or any subdirectory
+The sub-agent never scans `C:\mybizz\logs\` or `C:\backups-general\` (or any subdirectory
 of either). Both contain output generated by this skill's own runs — scanning them would cause
 circular drift where each run's output mutates the scan surface for the next run.
 
@@ -393,7 +397,7 @@ behavior without editing SKILL.md or any agent file directly.
 **Learnings overrule SKILL.md** for everything except the Hard Constraints at the top of this
 document. If a Learnings entry conflicts with a SKILL.md rule on scope, classification,
 exclusion, or recommendation logic, the Learnings entry wins. Learnings can never:
-- authorize a write outside Phase 4
+- authorize a write outside Phase 4a/4b
 - authorize skipping Phase 0 backup or its verification
 - authorize running `gbrain sync` or any GBrain state-changing command
 - bypass Phase 3 developer approval
@@ -445,6 +449,55 @@ as a failure to follow this section, not a helpful clarification. If `/docs-mana
 with no scope keyword, that means full run (Section 7) — this is not ambiguous and must not be
 asked about.
 
+### Phase −2: Resume Check — Orchestrator (read-only, then read/write)
+
+Before anything else — before Learnings even loads — check
+`C:\mybizz\logs\docs-manager\in-progress\` for a leftover file from a previous invocation that
+never finished (e.g. the session was lost mid-run).
+
+- **If `in-progress\` is empty**: this is a genuinely new run. Clear
+  `C:\mybizz\logs\docs-manager\last-completed-run\` (Section 5a) and proceed to Phase −1.
+- **If `in-progress\` has a file**: stop and ask the developer directly — never decide this
+  automatically: *"An incomplete run from `<timestamp>` was found. Last completed phase:
+  `<X>`. [one-line summary of what's captured]. Resume from here, or discard and start fresh?"*
+  - **Resume**: continue appending to the *same* file, and jump straight to the phase after
+    the last one recorded — do not re-run completed phases. Do **not** clear
+    `last-completed-run\` (this isn't a new run). If resuming into Phase 4a/4b (applying
+    already-approved changes) after any real time gap, re-verify each approved change still
+    matches current file content before writing it — if the target has changed since the scan,
+    flag that specific item instead of applying a now-stale edit blindly.
+  - **Discard**: move the stale file to `C:\mybizz\logs\docs-manager\abandoned-runs\` (keep its
+    original timestamp, never delete it), then proceed as a new run — clear
+    `last-completed-run\`, create a fresh `in-progress\` file, continue to Phase −1.
+
+#### Continuous checkpointing (applies to every phase from here through Phase 9)
+
+A single file, `C:\mybizz\logs\docs-manager\in-progress\<run-timestamp>.md`, is created the
+moment a new run begins and appended to — never overwritten, never summarized down — as each
+phase completes:
+
+| After this phase completes | What gets appended |
+|---|---|
+| −1 (Learnings loaded) | Learnings file count |
+| 0 (Backup/pre-flight) | Backup verification result, git-status result |
+| 1 (Scan) | **The full, verbatim change report** — this is "a copy of the scan" |
+| 3 (Approval received) | **The developer's approval decisions, verbatim** — before Phase 4a/4b starts. This is the single most important checkpoint: it's what would have preserved a lost session's worth of review work. |
+| 4a (Text edits applied) | Exact before/after content for every edit made |
+| 4b (File-system operations) | Exact operation performed, old path → new path, for every one |
+| 5 (Verify) | Verification result |
+| 6 (Commit/push) | Commit/push result (or reference to the github-logs file) |
+| 7 (Log) | Reference to the newly-written permanent log entry |
+| 8 (Learnings) | Reference to any new learning files written |
+
+This file must contain **enough detail to fully reconstruct or reverse every action taken in
+the run** — exact content, exact paths, not a summary. It exists specifically so that if a
+session is lost mid-run, nothing has to be redone or reconstructed from memory, and so that
+after a run completes, there's a complete record available for remediation if something needs
+tracing back.
+
+This continuous checkpointing is exempt from Hard Constraint 1 the same way Phase 0/7/8 are —
+it only ever appends to one new file, never touches original content.
+
 ### Phase −1: Load Learnings — Orchestrator (read-only)
 
 See Section 4.3. Not a sub-agent — OpenCode reads the Learnings folder directly and passes it
@@ -476,7 +529,7 @@ clean, and only Docs Manager's own changes will ever appear in a commit.
 
 **Backup scope is the five managed document types, not the full walk tree.** Copying the
 entire in-scope filesystem (everything Phase 1 walks for structural verification) would include
-enormous amounts of content Docs Manager never writes to — Phase 4 only ever modifies
+enormous amounts of content Docs Manager never writes to — Phase 4a only ever modifies
 `docmap.md`, `project-inventory.md`, `README.md`, `AGENTS.md`, and `INDEX.md` files (Section
 1.3, 1.4), so only those need a safety copy.
 
@@ -488,9 +541,9 @@ nothing copied into it. Step 3 below exists specifically to catch this and is ne
    1.2) — the same exclusion rules Phase 1 uses — but only to locate every file matching one of
    the five managed document types by name. This does not read or analyze content, just finds
    the files. Record the exact count.
-2. Copy exactly those files to `C:\backup-docs-manager\<run-timestamp>\`, preserving each
-   file's full relative path from `C:\` (so multiple `README.md` instances from different
-   folders don't collide).
+2. Copy exactly those files to `C:\backups-general\backup-docs-manager_<run-timestamp>\`,
+   preserving each file's full relative path from `C:\` (so multiple `README.md` instances from
+   different folders don't collide).
 3. **Verify by directly counting files in the destination folder** (not by assuming the copy
    succeeded) and comparing that number to the discovery count from Step 1. An empty or
    short destination folder is `BACKUP_FAILED`, not a partial success to note and continue past.
@@ -499,7 +552,7 @@ nothing copied into it. Step 3 below exists specifically to catch this and is ne
    `BACKUP_FAILED` reason.
 5. Only on verified success does the run proceed to Phase 1.
 
-`C:\backup-docs-manager\` itself is excluded from all future scan scope (Section 2.4) so
+`C:\backups-general\` itself is excluded from all future scan scope (Section 2.4) so
 backups never get walked, referenced, or treated as drift.
 
 ### Phase 1: Scan — Sub-agent (read-only)
@@ -529,15 +582,25 @@ the Learnings content from Phase −1. The sub-agent:
 - Files inspected (managed types): N
 - Documents checked: N
 - References scanned: N
-- Changes proposed: N
+- Text edits proposed: N
+- File-system operations proposed: N
 - Anomalies flagged: N
 
-## Proposed Changes
+## Proposed Text Edits
 
 ### <Document Path>
 | Line | Current | Proposed | Reason |
 |---|---|---|---|
 | ... | ... | ... | ... |
+
+## Proposed File-System Operations
+
+*Shown separately from text edits — these are more consequential (rename/move) and never
+include a delete; anything that would be a delete is a move to `obsolete\` instead.*
+
+| Operation | Current Path | New Path | Reason |
+|---|---|---|---|
+| Rename / Move / Copy | ... | ... | ... |
 
 ## Flagged Anomalies (Needs Human Decision)
 
@@ -559,17 +622,43 @@ is what I'd do" — never just a question with no suggested answer (Section 6).
 
 OpenCode presents the change report. Developer reviews proposed changes and anomalies. Approval
 is per-document, per-change, or batch. **Approval triggers continuation** — saying "approved"
-or "apply" moves to Phase 4.
+or "apply" moves to Phase 4a/4b.
 
-Resolved anomalies are treated as approved changes for Phase 4, and are candidates for a new
+Resolved anomalies are treated as approved changes for Phase 4a/4b, and are candidates for a new
 Learnings entry (Phase 8).
 
-### Phase 4: Apply — Sub-agent (write)
+### Phase 4a: Apply — Text Edits — Sub-agent (edit only)
 
-A second sub-agent applies only the approved changes (Hard Constraint 1). Unresolved anomalies
-are not applied.
+A sub-agent applies only the approved *text edits* (Hard Constraint 1) — changes to the content
+of `docmap.md`, `project-inventory.md`, `README.md`, `AGENTS.md`, `INDEX.md`. Unresolved
+anomalies are not applied. This sub-agent has no bash access — it cannot rename, move, delete,
+or create files, only edit the content of files that already exist.
 
-If no changes were approved: skip to Phase 7 (Log).
+If no text edits were approved: skip to Phase 4b, or to Phase 7 (Log) if there are none of
+those either.
+
+### Phase 4b: Apply — File-System Operations — Sub-agent (bash only)
+
+A **separate** sub-agent, with the opposite permission profile (bash, no edit), applies only
+approved *file-system operations* — rename, move, or copy. This is a distinct category from
+Phase 4a for a specific reason: a rename or move is more consequential and harder to casually
+verify than a one-line text correction, so it gets its own scoped tool access and its own gate,
+rather than sharing Phase 4a's.
+
+**This sub-agent never deletes anything, under any circumstance.** Any operation that would
+otherwise be a delete is rewritten as a move to the relevant `obsolete\` folder (Section 6 of
+`docmap.md` already defines where — `C:\dev\obsolete\` or `C:\mybizz\Mgt\obsolete\`). If no
+`obsolete\` destination is obvious for a given case, that item is not auto-resolved — it's
+flagged back to the developer instead of guessed at.
+
+**Second confirmation, on top of Phase 3 approval:** immediately before executing, the
+orchestrator lists exactly which file-system operations are about to run (e.g. *"About to: (1)
+rename `X` → `Y`, (2) move `Z` to `obsolete\`. Proceed?"*) and waits for explicit confirmation.
+Being approved in the Phase 2 report is necessary but not sufficient for this category — there
+is always one more explicit go immediately before anything executes.
+
+If no file-system operations were approved: skip to Phase 5, or Phase 7 if Phase 4a also had
+nothing to apply.
 
 ### Phase 5: Verify — Sub-agent (read-only)
 
@@ -581,8 +670,8 @@ If changes were applied, the sub-agent:
 
 ### Phase 6: Commit & Push — Sub-agent (write, git)
 
-Runs only if Phase 4 applied changes and Phase 5 verified cleanly. If no changes were applied
-in Phase 4, skip this phase entirely.
+Runs only if Phase 4a or 4b applied changes and Phase 5 verified cleanly. If no changes were applied
+in either, skip this phase entirely.
 
 Because Phase 0's pre-flight check (Step 0) already guaranteed every in-scope repo was clean
 before the run started, the only changes present in any repo at this point are Docs Manager's
@@ -658,7 +747,7 @@ not the day it began. The log body records both times as internal fields:
 **Scope:** full
 **Scan started:** 2026-07-22T17-27-00
 **Completed:** 2026-07-23T10-47-00
-**Backup:** verified — C:\backup-docs-manager\2026-07-23T10-47-00\
+**Backup:** verified — C:\backups-general\backup-docs-manager_2026-07-23T10-47-00\
 **Folders walked:** 340
 **Files inspected (managed types):** 27
 **Documents checked:** 27
@@ -688,7 +777,7 @@ folder and file counts are exact, every time.
 
 ### Phase 8: Update Learnings — Orchestrator (mandatory)
 
-**Phase 8 is mandatory whenever Phase 4 applied changes. The orchestrator must not skip it.**
+**Phase 8 is mandatory whenever Phase 4a or 4b applied changes. The orchestrator must not skip it.**
 
 After the log is written (Phase 7), the orchestrator reviews the run for judgment calls the
 developer made in Phase 3 that are likely to recur — anomaly resolutions, new conventions
@@ -725,7 +814,7 @@ After Phase 8 completes and is verified, before the run is considered closed:
 #### Step 1: Re-verify the division map
 
 Run a small, `division-maps`-scoped re-scan of `docmap.md` and `project-inventory.md` only
-(Section 7). This exists because the run's own actions (Phase 4 edits, Phase 6 commits) can
+(Section 7). This exists because the run's own actions (Phase 4a/4b changes, Phase 6 commits) can
 themselves cause these two documents to drift by the time the run finishes — e.g. a new
 directory or repo appearing as a side effect of what was just applied. If this re-scan finds
 anything, it goes through its own small Phase 2/3/4 report-approve-apply cycle before
@@ -757,6 +846,18 @@ The script handles the stop/sync/embed/restart cycle externally and writes its o
 `C:\mybizz\logs\gbrain-logs\sync-<timestamp>.log`. Docs Manager itself never executes `gbrain
 sync` or touches GBrain state directly.
 
+#### Step 3a: mb-align-docs reminder (conditional)
+
+Only if Phase 4b applied any file-system changes (renames, moves, or retirements to `obsolete\`)
+during this run: show the developer a single reminder line, not a yes/no question — *"This run
+made structural changes (renames/moves). Consider running mb-align-docs against the affected
+project next, to catch any register or front-matter drift these changes may have introduced."*
+
+This is a static, informational reminder only — it does not read mb-align-docs' state, register,
+or learnings, and Docs Manager takes no action based on it. It exists purely so the developer is
+prompted at the natural moment, the same way Steps 2 and 3 already prompt for GitHub and GBrain.
+If Phase 4b made no changes this run, skip this step entirely — no message shown.
+
 #### Step 4: Closing git-status snapshot
 
 After both prompts are answered, run a `git status` sweep across all Active Repositories
@@ -765,6 +866,53 @@ only, not a timestamp — distinguishes it from the commit-push report). The fil
 table: repository, remote URL, branch, ahead/behind counts, and status (clean or dirty). This
 is the definitive closing record that every repo is confirmed synced — a fixed point of
 reference if a discrepancy is ever suspected later.
+
+#### Step 5: Finalize run state
+
+This is the very last action of the run. Move the entire contents of
+`C:\mybizz\logs\docs-manager\in-progress\<run-timestamp>.md` to
+`C:\mybizz\logs\docs-manager\last-completed-run\<run-timestamp>.md` (Section 5a) — a move, not
+a copy, so `in-progress\` ends the run empty. The permanent Phase 7 log and this file coexist
+and serve different purposes (Section 5a) — this step doesn't replace or duplicate Phase 7,
+it closes out the working record that Phase −2 onward has been building throughout the run.
+
+---
+
+## 5a. Run State: in-progress, last-completed-run, abandoned-runs
+
+Three folders under `C:\mybizz\logs\docs-manager\`, alongside the permanent log and Learnings,
+protecting two different windows of time:
+
+- **`in-progress\`** protects **a run while it's actively happening** — live, continuously
+  updated (Phase −2's checkpointing table). This is what a lost session recovers from.
+- **`last-completed-run\`** protects **the gap between runs** — after one finishes, before the
+  next begins. Single slot: always holds exactly the most recent completed run's full working
+  record, moved there from `in-progress\` as the very last action of the previous run (Phase 9,
+  Step 5). It must contain enough detail to fully trace and, if needed, reverse anything that
+  run did — the same completeness standard as the live `in-progress\` record, not a summary.
+- **`abandoned-runs\`** holds discarded incomplete runs — never deleted, kept for the same
+  reason nothing else in this system is silently thrown away.
+
+**This coexists with, and does not replace, the permanent Phase 7 log.** The permanent log is a
+distilled, structured summary that accumulates forever — the long-term history and the context
+future Learnings draw on. `last-completed-run\` is the complete raw record of only the most
+recent run, at a fixed, predictable path, for immediate troubleshooting right after a run or
+before the next one starts.
+
+**Clearing timing**: `last-completed-run\` is only cleared when a genuinely *new* run begins —
+`in-progress\` was found empty at invocation, or the developer explicitly chose "discard" over
+"resume" (Phase −2). Resuming a run is a continuation, not a new run, and never clears it.
+
+Walking through a full cycle:
+
+| State | `in-progress\` | `last-completed-run\` |
+|---|---|---|
+| Idle | empty | previous run's full record |
+| New run starts | fresh file created | cleared |
+| Run active (fresh or resumed) | filling up | empty — `in-progress\` is doing the protecting |
+| Session lost mid-run | has partial record | empty (unchanged) |
+| Next invocation finds the partial record | offers resume/discard | unaffected until resolved |
+| Run finishes | moved out, now empty | now holds this run's full record |
 
 ---
 
@@ -803,19 +951,21 @@ no "which of these did you mean."
 
 ## 8. Sub-Agent Files
 
-Four single-purpose agent files, each with only the permissions its phase needs:
+Five single-purpose agent files, each with only the permissions its phase needs:
 
 | File | Phase | Permissions |
 |---|---|---|
 | `docs-manager-backup.md` | 0 — Backup | copy-only |
 | `docs-manager-scan.md` | 1 — Scan | read-only |
-| `docs-manager-apply.md` | 4 — Apply approved changes | edit |
+| `docs-manager-apply.md` | 4a — Apply text edits | edit only |
+| `docs-manager-filesystem.md` | 4b — Apply file-system operations | bash only, never deletes |
 | `docs-manager-commit.md` | 6 — Commit & Push | git/bash |
 
-Phases −1, 2, 3, 7, 8, and 9 are orchestrator-level (OpenCode itself), not sub-agents — they're
-simple reads/writes or developer interaction, not scanning work. (Phase 9's Step 1 re-verify
-does launch the Phase 1 scan sub-agent again, scoped to `division-maps` — it isn't a new
-sub-agent, just a repeat, narrower invocation of the existing one.)
+Phases −2, −1, 2, 3, 7, 8, and 9 are orchestrator-level (OpenCode itself), not sub-agents —
+they're simple reads/writes, checkpointing, or developer interaction, not scanning or applying
+work. (Phase 9's Step 1 re-verify does launch the Phase 1 scan sub-agent again, scoped to
+`division-maps` — it isn't a new sub-agent, just a repeat, narrower invocation of the existing
+one.)
 
 **None of these files pin a specific model.** The frontmatter intentionally omits a `model:`
 field so each run uses whichever model is currently active/selected — a model named explicitly
@@ -823,8 +973,9 @@ today is likely to be outdated later, and this system should not need editing ju
 active model changes.
 
 Prompt content for each is in `docs-manager-backup.md`, `docs-manager-scan.md`,
-`docs-manager-apply.md`, and `docs-manager-commit.md` respectively — see those files for the
-full instructions each sub-agent runs under. They implement Sections 1–6 of this document.
+`docs-manager-apply.md`, `docs-manager-filesystem.md`, and `docs-manager-commit.md`
+respectively — see those files for the full instructions each sub-agent runs under. They
+implement Sections 1–6 of this document.
 
 ---
 
@@ -849,14 +1000,20 @@ full instructions each sub-agent runs under. They implement Sections 1–6 of th
 
 ## 10. Log Directory Structure
 
-Three directories under `C:\mybizz\logs\`, three naming conventions, no cross-contamination:
+Three top-level directories under `C:\mybizz\logs\`, no cross-contamination:
 
 ```
 C:\mybizz\logs\
 ├── docs-manager\
 │   ├── <timestamp>.md                    ← Phase 7 run log (bare timestamp, completion time)
-│   └── Learnings\
-│       └── <timestamp>-<short-topic>.md  ← Phase 8 learnings
+│   ├── Learnings\
+│   │   └── <timestamp>-<short-topic>.md  ← Phase 8 learnings
+│   ├── in-progress\
+│   │   └── <run-timestamp>.md            ← live, active run only (Section 5a)
+│   ├── last-completed-run\
+│   │   └── <run-timestamp>.md            ← single slot, most recent completed run (Section 5a)
+│   └── abandoned-runs\
+│       └── <run-timestamp>.md            ← discarded incomplete runs, never deleted
 ├── github-logs\
 │   ├── commit-push-<date>.md             ← Phase 6 commit/push report
 │   └── git-status-<date>.md              ← Phase 9 closing snapshot
@@ -866,7 +1023,8 @@ C:\mybizz\logs\
 
 `github-logs/` is a new directory not yet reflected in `docmap.md` at the time of this
 revision — the first run after this change will find it `UNDOCUMENTED` under the normal
-Section 3.1 rules and propose adding it, same as any other new folder.
+Section 3.1 rules and propose adding it, same as any other new folder. The same applies to
+`in-progress\`, `last-completed-run\`, and `abandoned-runs\`.
 
 ---
 
@@ -902,7 +1060,8 @@ Section 3.1 rules and propose adding it, same as any other new folder.
 8. **The log and learnings files themselves**: Written by OpenCode (Phases 7 and 8), not by any
    sub-agent. No sub-agent ever writes to `C:\mybizz\logs\`.
 
-9. **Backup growth**: `C:\backup-docs-manager\` accumulates one timestamped snapshot per run
+9. **Backup growth**: `C:\backups-general\` accumulates one timestamped snapshot per run, per
+   tool (e.g. `backup-docs-manager_<timestamp>\`, `backup-mb-align-docs_<timestamp>\`),
    and is never itself scanned or pruned by this skill. Since backups now contain only the five
    managed document types (a handful of small text files, not whole directory trees), this
    growth is minor — but retention/cleanup of old snapshots is still a separate, manual concern,
@@ -937,3 +1096,23 @@ Section 3.1 rules and propose adding it, same as any other new folder.
     before Phase 0's backup even begins. This is deliberate: it's simpler and safer to guarantee
     every in-scope repo starts clean than to have Phase 6 reason about what to do with unrelated
     pending changes mid-run.
+
+16. **Resume never re-runs completed phases**: Picking up an incomplete run continues appending
+    to the same `in-progress\` file and jumps to the phase after the last one recorded — it does
+    not re-scan, re-ask for approval already given, or redo anything already checkpointed. If
+    the underlying files changed since the scan (a real gap between the crash and the resume),
+    Phase 4a/4b re-verifies each approved change still matches current content before applying
+    it, rather than trusting a potentially-stale line number or file state.
+
+17. **Resume/discard is always asked, never automatic**: Even though checking `in-progress\` at
+    invocation is itself automatic (Phase −2 begins immediately, per Section 5's invocation
+    rule), what to do with what's found there is not — this is the one point in the whole
+    workflow between invocation and Phase 2 where the developer is addressed before a report
+    exists, because a leftover incomplete run is exactly the kind of ambiguous situation this
+    system never guesses at.
+
+18. **File-system operations structurally cannot delete**: This isn't a style preference
+    enforced by a prompt asking nicely — `docs-manager-filesystem.md`'s own instructions define
+    "delete" as "move to `obsolete\`" at the operation level, so there is no delete action for
+    it to perform even if a report or approval were phrased using that word. The V7 run that
+    performed a real delete (before this fix) could not happen under this design.
