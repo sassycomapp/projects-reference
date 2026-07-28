@@ -44,8 +44,8 @@ scope Section 2) require both sides present in the same run to validate.
 - **detector** — read-only. Performs Detect. Cannot write.
 - **writer-text** — write permission for text-level corrections only:
   reference repoints (healing fixes) and front-matter insertion for
-  missing-front-matter findings. Cannot rename, move, or retire a
-  file.
+  missing-front-matter and incomplete-front-matter findings. Cannot
+  rename, move, or retire a file.
 - **writer-structural** — write permission for structural actions only:
   identifier-change renames plus their triggered sweep, register
   rename/retire actions, Quarantine moves. Requires the second
@@ -194,6 +194,15 @@ Runs as part of Detect, after Backup/precondition:
 - After writing, Verify re-reads the document to confirm the block now
   contains all four required fields, and that no pre-existing field was
   altered.
+- Content under `templates-global` and `templates-local` folders is
+  excluded from this check entirely — templates are reusable stencils,
+  not documents with identity or lifecycle, and are never expected to
+  carry front matter. This is a categorical exclusion, not a recurring
+  gap to flag.
+- Files named `devlog-index.md` or `judgement-trail.md`, anywhere within
+  a project-library, are historical logs and excluded from front-matter
+  scope — "no front matter" is correct and expected for these files, by
+  design, regardless of which folder they sit in.
 
 ## Directionality rules (enforced during Detect)
 
@@ -215,10 +224,10 @@ a drift item — heal to the current live version, or remove.
 | Folder | Holds |
 |---|---|
 | `C:\mybizz\logs\mb-align-docs\` | Permanent history, one record per run |
-| `...\learnings\` | Judgment calls from past runs |
-| `...\in-progress\` | Current run only — resume source if interrupted |
-| `...\last-completed-run\` | Full detail of most recent finished run |
-| `...\abandoned-runs\` | Declined-resume runs, kept, never deleted |
+| `C:\mybizz\logs\mb-align-docs\learnings\` | Judgment calls from past runs |
+| `C:\mybizz\logs\mb-align-docs\in-progress\` | Current run only — resume source if interrupted |
+| `C:\mybizz\logs\mb-align-docs\last-completed-run\` | Full detail of most recent finished run |
+| `C:\mybizz\logs\mb-align-docs\abandoned-runs\` | Declined-resume runs, kept, never deleted |
 | `C:\backups-general\backup-mb-align-docs_<timestamp>\` | Verified backups, one snapshot per run |
 | `{slug}-project-library\register-local\` | Project's populated register |
 | `project-library-global\register-global\` | Global populated register |

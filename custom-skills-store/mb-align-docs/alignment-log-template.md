@@ -16,7 +16,7 @@ per approved-and-applied finding.
 entry-id:
 date:                 # YYYY-MM-DDTHHMMSS+0200 (Filename-Safe ISO 8601, UTC+2) — global-0037 (C:\dev\project-library-global\adr-global\timezone-utc-storage-display-conversion.md)
 run-id:
-finding-type:        # reference-healing | identifier-change | register-mismatch
+finding-type:        # reference-healing | identifier-change | register-mismatch | missing-front-matter | incomplete-front-matter
 target-document(s):
 evidence:
 recommendation-given:
@@ -35,6 +35,10 @@ verified:             # yes/no — result of Verify phase
 - **register-mismatch** — `developer-decision` must be one of
   `Rename-to-match-register` or `Retire`. No other value is valid for this
   finding-type.
+- **missing-front-matter** — `action-taken` states the full front-matter
+  block that was written.
+- **incomplete-front-matter** — `action-taken` states which specific
+  field(s) were added; pre-existing fields are never listed as changed.
 
 ## Reminder
 

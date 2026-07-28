@@ -25,9 +25,15 @@ Read-only. Cannot write, rename, move, or retire anything. Cannot invoke
 - Produces every finding in the exact shape defined by
   `finding-report-format.md` — type, target, evidence, recommendation,
   fixed option set. No finding is ever produced without a recommendation.
+- Runs the missing-front-matter and incomplete-front-matter check per
+  SKILL.md's Missing-front-matter check section: re-reads every in-scope
+  document for a YAML front-matter block, identifying documents that
+  lack front matter entirely and documents whose front matter is missing
+  one or more required fields.
 - Classifies each finding by type (`reference-healing`,
-  `identifier-change`, `register-mismatch`) so Approve/Apply routes it to
-  the correct writer.
+  `identifier-change`, `register-mismatch`,
+  `missing-front-matter`, `incomplete-front-matter`) so Approve/Apply
+  routes it to the correct writer.
 - Writes ongoing progress to `C:\mybizz\logs\mb-align-docs\in-progress\`
   as it works, so an interrupted session can resume from where Detect left
   off.

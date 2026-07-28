@@ -202,6 +202,37 @@ matter and register entries like any other in-scope document.
 
 ---
 
+## 9. Scope exclusions: template folders
+
+Any file located anywhere under a `templates-global` or `templates-local`
+folder is permanently out of scope for front matter and register entries.
+Templates are reusable stencils, not documents with identity or
+lifecycle — this is a categorical rule, not specific to any one file type.
+
+Applications:
+- The missing-front-matter check never flags a file under either folder
+  as a gap — "no front matter" is correct and expected for templates, by
+  design.
+- The populate-local-register and populate-global-register steps never
+  create entries for files under either folder.
+- Templates are never referenced by another document and never appear in
+  cross-reference validation.
+
+## 10. Scope exclusions: historical logs
+
+Any file named exactly `devlog-index.md` or `judgement-trail.md`,
+anywhere within a project-library (not only at project root), is a
+historical log and is excluded from front-matter scope and register
+entries. "No front matter" on these files is correct and expected, by
+design, regardless of which folder they sit in.
+
+Applications:
+- The missing-front-matter check never flags these files as a gap.
+- The populate-local-register and populate-global-register steps never
+  create entries for these files.
+
+---
+
 ## Status
 Function scope agreed and locked as of 2026-07-24. Framework (safety nets,
 backup-before-write, resume/checkpoint, approval mechanics, naming) is the
