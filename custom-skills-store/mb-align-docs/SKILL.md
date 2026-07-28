@@ -27,7 +27,7 @@ Log structure: `alignment-log-template.md`.
 Front matter rules: `front-matter-schema.md`.
 Register structure: `register-template.md`.
 Quarantine provenance: `quarantine-provenance-template.md`.
-Short-form summary: `README.md`.
+Short-form summary: `C:\dev\dev-root\mb-align-docs-README.md`.
 
 ## Invocation
 
