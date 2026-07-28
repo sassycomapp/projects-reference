@@ -1,4 +1,17 @@
 ---
+name: mb-align-docs
+description: |
+  Document-consistency checker. Cross-references every document in scope
+  against every other, finds terminology mismatches, contradicting
+  requirements, stale references, orphaned cross-references, and identifier
+  drift, then walks the developer through findings one at a time with an
+  opinionated recommendation, fixing only what is approved.
+
+  Companion to Docs Manager. Does not interoperate with Docs Manager — see
+  mb-align-docs-function-scope.md Section 7. Docs Manager owns folder/file
+  structure and current-state indexing. This skill owns document *content*
+  agreement, cross-references, and document identity/lifecycle. Framework
+  below deliberately mirrors Docs Manager's proven structure.
 document: mb-align-docs SKILL
 version: V1
 status: active
