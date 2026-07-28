@@ -2,6 +2,9 @@
 document: mb-align-docs SKILL
 version: V1
 status: active
+triggers:
+  - /mb-align-docs
+  - /mb-align-docs <slug>
 ---
 
 # mb-align-docs — SKILL
@@ -28,8 +31,9 @@ Short-form summary: `README.md`.
 
 ## Invocation
 
-Manual only. `/mb-align-docs` — developer-triggered, no autonomous
-scheduling. Run against one project at a time.
+Manual only. `/mb-align-docs <slug>` — developer-triggered, no autonomous
+scheduling. `<slug>` names the project (matching
+`{slug}-project-library`). Run against one project at a time.
 
 ## Scope rule
 
