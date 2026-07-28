@@ -5,7 +5,7 @@
 ## START OPENCODE
 
 ```bash
-cd /mnt/c/_mb2-cs-app/project-library
+cd /mnt/c/dev/dev-mb-3-cs/mb-3-cs-project-library
 opencode web --hostname 0.0.0.0
 ```
 Then open browser: `http://localhost:3000`
@@ -24,13 +24,29 @@ Then run Start sequence above.
 ## AFTER DOING WORK — run every time
 
 ```bash
-cd /mnt/c/_mb2-cs-app/project-library
+cd /mnt/c/dev/dev-mb-3-cs/mb-3-cs-project-library
 git add -A
 git commit -m "your message here"
 git push origin main
 gbrain sync
 gbrain embed --stale
 ```
+
+---
+
+## RUN MB-ALIGN-DOCS AFTER A DOCS MANAGER RUN THAT DID STRUCTURAL CHANGES
+
+If Docs Manager renamed, moved, or retired files within a project-library
+(or project-library-global), run mb-align-docs against that same project
+next — before considering the documentation environment stable:
+
+```
+/mb-align-docs (project-name)
+```
+
+This catches register or front-matter drift that Docs Manager's structural
+changes may have introduced. Skip if the Docs Manager run was text-only
+corrections (no renames, moves, or retires).
 
 ---
 
@@ -75,7 +91,7 @@ Your git push already backed up the project-library. Nothing to worry about.
 ## CHECK WHAT'S NOT COMMITTED YET
 
 ```bash
-cd /mnt/c/_mb2-cs-app/project-library
+cd /mnt/c/dev/dev-mb-3-cs/mb-3-cs-project-library
 git status
 ```
 
@@ -105,7 +121,7 @@ Before starting, search GBrain for: [your topic here]
 Restart OpenCode from WSL:
 ```bash
 pkill -f "opencode web"
-cd /mnt/c/_mb2-cs-app/project-library
+cd /mnt/c/dev/dev-mb-3-cs/mb-3-cs-project-library
 opencode web --hostname 0.0.0.0
 ```
 
