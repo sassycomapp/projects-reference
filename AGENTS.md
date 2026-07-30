@@ -4,7 +4,7 @@
 
 ## Project purpose
 
-This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), the project template (`dev-project-template/`), and global reference documents. Individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`) are located in `C:\dev\`. Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects-reference\` workspace itself.
+This is the umbrella workspace for all Anvil.works projects. It houses shared resources in `project-library-global/` (global ADRs, checklists, docs, policies, specifications, templates), the project template (`project-template/`), and global reference documents. Individual project workspaces (e.g. `dev-mb-3-cs/`, `dev-mb4ecom/`, `dev-pdlf/`) are located in `C:\dev\`. Each individual project has its own `AGENTS.md` and `README.md`. This root `AGENTS.md` governs only the `C:\projects-reference\` workspace itself.
 
 ---
 
@@ -35,7 +35,7 @@ Conflict triggers Default-to-Ask.
 ## Hard rules
 
 ### 1. anvil.yaml protection (enforced by opencode.json)
-Never write to `anvil.yaml`. Stop and ask if a task appears to require changing it.
+Never write to `anvil.yaml`. Anvil.yaml is always READ ONLY. Stop and ask if a task appears to require changing it.
 
 ### 2. Plan reads, Build writes (enforced by opencode.json)
 Plan never writes. Build writes only where user has approved. No exceptions without explicit, case-by-case confirmation.
@@ -112,4 +112,4 @@ Fact rule: do not use training data or memory for project-specific facts. GBrain
 
 ## Task completion reporting
 
-When working in a project, follow that project's reporting mechanics. When at `C:\projects-reference` level, reports go to the relevant project's `opencode-outputs/` folder.
+When working in a project, follow that project's reporting mechanics. When at `C:\projects-reference` level, reports go to the relevant project's `output-opencode/` folder.

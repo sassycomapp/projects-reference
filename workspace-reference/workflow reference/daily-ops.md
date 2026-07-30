@@ -136,5 +136,9 @@ opencode web --hostname 0.0.0.0
 | Ctrl+X then N | New session |
 
 ---
+Role	Provider	Status
+Embedding	OpenAI (text-embedding-3-large)	✓ active
+Chat / Expand	OpenAI (gpt-5.2)	✓ active, will move to Anthropic
+Reranker	ZeroEntropy	✓ confirmed active
 
 *That's it. Everything else lives in the reference docs.*
